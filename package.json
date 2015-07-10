@@ -1,0 +1,14 @@
+{
+    "name": "scamp",
+    "description": "SCAMP SOA libraries",
+    "version": "0.1.0",
+    "repository": "https://github.com/gudTECH/scamp.git",
+    "author": {
+        "name" : "güdTECH"
+    },
+    "dependencies" : {
+    },
+    "engines": { "node" : ">=0.4.0" },
+    "license": "MIT",
+    "main": "./js/lib/index.js"
+}

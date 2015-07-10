@@ -1,0 +1,93 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides: soa-cache-manager
+# Required-Start: $local_fs
+# Should-Start: 
+# Default-Start: 
+# Default-Stop: 0 1 2 3 4 5 6
+# Description: SCAMP SOA cache updater
+### END INIT INFO
+
+. /etc/rc.d/init.d/functions
+
+APP_NAME="SOA cache manager"
+APP_PATH=/opt/gt/scamp
+APP_USER=gt
+PID_PATH=/var/run/scamp/cache-manager.pid
+COMMAND="setsid /usr/local/bin/node js/script/cache-manager.js"
+
+# eveything below this point is common betwen the SOA scripts
+
+start() {
+    if [ -r "$PID_PATH" ] && kill -0 $(cat "$PID_PATH") >/dev/null 2>&1
+    then
+        echo " $APP_NAME already running"
+        exit 0
+    fi
+
+    echo -n "Starting $APP_NAME..."
+
+    touch "$PID_PATH"
+    chown "$APP_USER" "$PID_PATH"
+
+    cd "$APP_PATH"
+    su -c "$COMMAND --pidfile \"$PID_PATH\"" "$APP_USER"
+
+    # Wait for the app to start  
+    TIMEOUT=10; while [ ! -r "$PID_PATH" ] && ! kill -0 $(cat "$PID_PATH")
+    do
+        echo -n '.'; sleep 1; TIMEOUT=$((TIMEOUT - 1))
+        if [ $TIMEOUT = 0 ]; then
+            echo " ERROR: TIMED OUT"; exit 0
+        fi
+    done
+    echo " started."
+}
+
+stop(){
+    echo -n "Stopping $APP_NAME: "
+    if [ -r "$PID_PATH" ] && kill -0 $(cat "$PID_PATH") >/dev/null 2>&1
+    then
+        PID=`cat $PID_PATH`
+        echo -n "killing $PID... "; kill $PID
+        echo " OK."
+    else
+        echo "$APP_NAME not running."
+    fi
+}
+
+rh_status() {
+    status -p $PID_PATH
+}
+
+rh_status_q() {
+    rh_status &>/dev/null
+}
+
+restart() {
+    stop
+    start
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    status)
+        rh_status
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 2
+esac
+exit $?

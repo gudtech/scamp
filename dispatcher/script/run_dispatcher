@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+use POSIX;
+use FindBin;
+
+$ENV{PATH} .= ":/usr/local/bin";
+
+open STDERR, ">>", "/var/log/scamp/dispatcher-stderr.log" or die "cannot open STDERR log: $!\n";
+open STDOUT, ">&STDERR" or die "cannot open STDOUT log: $!\n";
+open STDIN, "<", "/dev/null";
+
+my $js_path = "$FindBin::Bin/../lib";
+$ENV{NODE_PATH} = "/opt/gt/node_modules:/usr/lib/node_modules";
+
+fork && exit; # not a pgrp leader; backgroundize
+POSIX::setsid or die "cannot setsid: $!\n";
+
+while (1) {
+    print "Starting dispatcher: " . `date`;
+    system("node", "$js_path/server.js", @ARGV);
+    last if $? == 51 << 8; # magic cookie for service soa-dispatcher stop => SIGTERM
+    print "CRASHED\n";
+    sleep 1;
+}

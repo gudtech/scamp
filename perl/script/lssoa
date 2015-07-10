@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use SCAMP::Config;
+use Getopt::Long;
+use SCAMP::Discovery::ServiceManager;
+use Text::SimpleTable::AutoWidth;
+
+my %p;
+
+GetOptions(\%p, 'raw', 'actions=s', 'all|a', 'host=s', 'name=s', 'verbose', 'with-action=s') or die <<USAGE ;
+
+lssoa [options]
+
+   --actions SVC      List actions of some service
+-a --all              Show unauthorized services
+   --host IP          Restrict to services from a given host (prefix match)
+   --name NAME        Select services by name (prefix match)
+   --raw              Tab-delimited output for parsing
+-v --verbose          Do not truncate columns
+   --with-action ACT  Restrict to services advertising a specific action
+
+USAGE
+
+my $sm = SCAMP::Discovery::ServiceManager->new;
+$sm->fill_from_cache;
+
+my @columns;
+my @data;
+
+if ($p{actions})
+{
+    my (@svc) = grep { $_->worker_ident =~ /^\Q$p{actions}/ } values %{ $sm->services };
+
+    @svc > 0 or die "No service $p{actions} currently available\n";
+    @svc < 2 or die "$p{actions} is ambiguous\n";
+    my ($service) = @svc;
+
+    $p{host} and die "--host may not be used with --actions\n";
+    $p{name} and die "--name may not be used with --actions\n";
+    $p{'with-action'} and die "--with-action may not be used with --actions\n";
+
+    my %uniq;
+    my @acts = grep { !$uniq{$_}++ } values %{ $service->offerings };
+
+    @acts = sort { ($a->[0] cmp $b->[0]) || ($a->[1] <=> $b->[1]) } @acts;
+
+    @columns = qw< Name Ver Flags AuthOK >;
+
+    for my $a (@acts) {
+        my $auth = $service->authorized($a->[0]);
+        next if !$auth && !$p{all};
+        push @data, [
+            $a->[0],
+            $a->[1],
+            join(",",@{$a->[2]}),
+            $auth ? 'Y' : 'N',
+        ];
+    }
+}
+else {
+    @columns = (qw< ID Sector Weight Interval Address Envelopes Fingerprint >, '#OK');
+
+    for my $service (values %{ $sm->services })
+    {
+        my %uniq;
+        my @acts = grep { $_->[0] !~ /^_meta\./ && !$uniq{$_}++ && $service->authorized($_->[0]) } values %{ $service->offerings };
+
+        my $addr = $service->address;
+        $addr =~ s|.*//|| unless $p{verbose};
+
+        next if $p{host} && !( $addr =~ /^\Q$p{host}/ );
+        next if !$p{all} && !@acts;
+        next if $p{'with-action'} && !grep { $_->[0] =~ /^\Q$p{'with-action'}/io } values %{ $service->offerings };
+        next if $p{name} && !( $service->worker_ident =~ /^\Q$p{name}/ );
+
+        push @data, [
+            $service->worker_ident,
+            $service->sector,
+            $service->weight,
+            $service->send_interval,
+            $addr,
+            join(',', @{ $service->envelopes }),
+            $p{verbose} ? $service->fingerprint : substr($service->fingerprint, 0, 8),
+            scalar @acts,
+        ];
+    }
+}
+
+if ($p{raw}) {
+    print join("\t", @$_), "\n" for @data;
+} else {
+    my $tab = Text::SimpleTable::AutoWidth->new(captions => \@columns, rows => \@data);
+    print $tab->draw;
+}

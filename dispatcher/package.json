@@ -1,0 +1,14 @@
+{
+  "author": "güdTECH",
+  "name": "gt-dispatcher",
+  "description": "SCAMP SOA dispatcher",
+  "version": "0.1.0",
+  "homepage": "http://gudtech.com",
+  "main": "server.js",
+  "engines": {
+    "node": ">=0.6.0"
+  },
+  "dependencies": {
+    "lru-cache": ">=0.0.0"
+  }
+}
