@@ -135,7 +135,7 @@ WebCommon.prototype.mineJson = function (req, res, data, cb) {
     var cookie_hdr = use_session_cookie ? cookie.parse(req.headers.cookie || '') : {};
 
     var terminal   = cookie_hdr.terminal || req.headers.terminal || params.terminal || '';
-    var ticket     = tickets.verify(cookie_hdr.session || req.headers.session || params.session);
+    var ticket     = tickets.verify(req.headers.session || params.session || cookie_hdr.session);
     var api_key    = req.headers.apikey  || params.apikey || '';
     var client_id  = req.headers.client_id || params.client_id || '';
 
