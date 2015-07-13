@@ -7,6 +7,7 @@
         "name" : "güdTECH"
     },
     "dependencies" : {
+        "argparser": "~0.2.2"
     },
     "engines": { "node" : ">=0.4.0" },
     "license": "MIT",

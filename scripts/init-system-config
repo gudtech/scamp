@@ -1,0 +1,3 @@
+#!/bin/bash 
+
+echo "bus.authorized_services = /etc/SCAMP/authorized_services" > /etc/SCAMP/soa.conf

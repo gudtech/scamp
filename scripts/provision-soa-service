@@ -6,6 +6,11 @@ service="$1"
 requests="$2"
 hostname=$(hostname)
 
+if [ ! -f /etc/SCAMP/soa.conf ]; then
+    echo "'/etc/SCAMP/soa.conf' not present. Run 'scripts/init-system-config'."
+    exit 1
+fi
+
 if test "x$service" = "x" -o "x$requests" = "x"
 then
     echo "usage: provision-soa-service SERVICE SECTOR" >&2
