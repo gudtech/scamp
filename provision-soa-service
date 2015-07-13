@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+service="$1"
+requests="$2"
+hostname=$(hostname)
+
+if test "x$service" = "x" -o "x$requests" = "x"
+then
+    echo "usage: provision-soa-service SERVICE SECTOR" >&2
+    exit 1
+fi
+
+if grep -q "^$service.soa_key =" /etc/GT/soa.conf
+then
+    echo "changed=no comment='already provisioned'"
+    exit 0
+fi
+
+mkdir -p /etc/GT/services
+openssl req -new -nodes -subj "/CN=$hostname $service/O=GT/C=US/ST=California/L=San Diego" -x509 -days 3650 -newkey rsa:4096 -out /etc/GT/services/$service.crt -keyout /etc/GT/services/$service.key
+
+fingerprint=$( openssl x509 -fingerprint -noout -in /etc/GTSOA/services/$service.crt | sed 's/.*=//' )
+
+echo "$fingerprint    $requests:ALL" >> /etc/GTSOA/authorized_services
+echo "$service.soa_key = /etc/GTSOA/services/$service.key" >> /etc/GT/soa.conf
+echo "$service.soa_cert = /etc/GTSOA/services/$service.crt" >> /etc/GT/soa.conf
+
+echo "changed=yes comment=provisioned"
