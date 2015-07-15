@@ -10,6 +10,9 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "chef/centos-6.6"
 
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/scamp", create: true
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -41,6 +44,14 @@ Vagrant.configure(2) do |config|
     sudo yum update
     sudo yum install epel-release -y
     sudo yum update
-    sudo yum install nodejs -y
+    sudo yum install nodejs npm -y
+    sudo yum install vim -y
+
+    sudo mkdir /etc/SCAMP
+    sudo sh /scamp/scripts/init-system-config
+    sudo sh /scamp/scripts/provision-soa-service helloworld main
+
+    sudo mkdir /var/log/scamp
+    sudo chown vagrant:vagrant /var/log/scamp
   SHELL
 end

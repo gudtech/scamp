@@ -7,7 +7,6 @@ svc.registerAction('helloworld.hello', 'noauth', svc.staticJsonHandler(function(
 
     // do some stuff
     // and then respond
-
     return_handler({ hello_world_text: 'Hello Javascript World!' });
 
 }));
