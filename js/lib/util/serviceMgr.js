@@ -4,6 +4,7 @@
 var soa        = require('../index.js'),
     util       = require('util'),
     EventEmitter = require('events').EventEmitter,
+    crypto     = require('crypto'),
     serviceCls = soa.module('handle/service');
 
 var timeoutMultiplier = 2.1;
@@ -63,7 +64,7 @@ Manager.prototype._loadCache = function() {
     var limit = soa.config().val('discovery.cache_max_age', 120);
     var fs = require('fs');
     var stat = fs.statSync(path);
-    if (Date.now() - stat.mtime.getDate() > 1000 * limit) soa.fatal('Stale discovery cache');
+    if (Date.now() - stat.mtime.getTime() > 1000 * limit) soa.fatal('Stale discovery cache');
 
     var buf = fs.readFileSync(path, 'utf8');
     var chunks = buf.split(/\n%%%\n/);
