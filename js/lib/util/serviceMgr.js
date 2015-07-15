@@ -174,7 +174,7 @@ Manager.prototype._index = function (reg, insert) {
 
         me._baseIndex(me._actionIndex, info.sector + ':' + aname + '.v' + info.version, name, insert && block);
 
-        block[4].forEach(function (crud_tag) {
+        info.flags.forEach(function (crud_tag) {
             if (alias_tags.indexOf(crud_tag) >= 0)
                 me._baseIndex(me._actionIndex, info.sector + ':' + info.namespace + '._' + crud_tag + '.v' + info.version, name, insert && block);
         });
