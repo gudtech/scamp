@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "argparser": "~0.2.2",
-    "dashdash": "~1.10.0"
+    "dashdash": "~1.10.0",
+    "cli-table2": "~0.1.5"
   },
   "engines": {
     "node": ">=0.4.0"
