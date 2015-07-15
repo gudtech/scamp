@@ -1,15 +1,18 @@
 {
-    "name": "scamp",
-    "description": "SCAMP SOA libraries",
-    "version": "0.1.0",
-    "repository": "https://github.com/gudTECH/scamp.git",
-    "author": {
-        "name" : "güdTECH"
-    },
-    "dependencies" : {
-        "argparser": "~0.2.2"
-    },
-    "engines": { "node" : ">=0.4.0" },
-    "license": "MIT",
-    "main": "./js/lib/index.js"
+  "name": "scamp",
+  "description": "SCAMP SOA libraries",
+  "version": "0.1.0",
+  "repository": "https://github.com/gudTECH/scamp.git",
+  "author": {
+    "name": "güdTECH"
+  },
+  "dependencies": {
+    "argparser": "~0.2.2",
+    "dashdash": "~1.10.0"
+  },
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "license": "MIT",
+  "main": "./js/lib/index.js"
 }
