@@ -196,8 +196,9 @@ function Observer() {
     var peering = new Peering();
 
     this.subSock = dgram.createSocket('udp4');
-    this.subSock.bind( info.port, info.group );
-    info.discovery.forEach(function (a) { this.subSock.addMembership( info.group, a ) }, this);
+    this.subSock.bind( info.port, info.group, function () {
+        info.discovery.forEach(function (a) { this.subSock.addMembership( info.group, a ) }, this);
+    });
 
     this.bag = new CacheBag();
 
