@@ -15,7 +15,7 @@ use File::Slurp qw( read_file );
 my %p;
 
 Getopt::Long::Configure ("no_ignore_case");
-GetOptions(\%p, qw( sector|S=s header|h=s data|d=s  action|A=s one-header|H=s% envelope=s  inflight|i=i rate|r=f  requests|n=i time|t=f  print-replies|p print-errors|e no-replies|s  quiet|q unaggregated|u warmup|w=i timeout|T=i ) ) or die <<USAGE ;
+GetOptions(\%p, qw( sector|S=s header|h=s data|d=s  action|A=s one-header|H=s% envelope=s  inflight|i=i rate|r=f  requests|n=i time|t=f  print-replies|p print-errors|e no-replies|s literal|Q  quiet|q unaggregated|u warmup|w=i timeout|T=i ) ) or die <<USAGE ;
 Usage: soatest {options}
 
 -S --sector    ID       Select a SOA sector to request (def. main)
@@ -35,6 +35,7 @@ Usage: soatest {options}
 -p --print-replies      Print replies (default if no -n or -t)
 -e --print-errors       Print error replies only (default otherwise)
 -s --no-replies         Print no replies ("silent")
+-Q --literal            Print only the response to STDERR
 
 -q --quiet              Suppress timing information
 -u --unaggregated       Per-request timing information
@@ -79,7 +80,7 @@ sub mutex {
     die join(", ", map { "--$_" } @_) . " are mutually exclusive\n" if (grep { exists $p{$_} } @_) > 1;
 }
 
-mutex qw( print-replies print-errors no-replies );
+mutex qw( print-replies print-errors no-replies literal );
 mutex qw( time requests );
 mutex qw( quiet unaggregated );
 mutex qw( warmup quiet );
@@ -90,7 +91,7 @@ die "--time without --inflight or --rate would only measure local buffering spee
 my $outputlevel = (exists($p{requests}) || exists($p{time})) ? 2 : 1;
 $outputlevel = 1 if $p{'print-replies'};
 $outputlevel = 2 if $p{'print-errors'};
-$outputlevel = 3 if $p{'no-replies'};
+$outputlevel = 3 if $p{'no-replies'} || $p{'literal'};
 
 $p{requests} = 1 if !$p{requests} && !$p{time};
 
@@ -122,7 +123,7 @@ sub fire_request_quota {
             ($p{time} && EV::now - $base >= $p{time})) {
         # our work here is done
         if (!$pending) {
-            summarize() unless $p{quiet};
+            summarize() unless $p{quiet} || $p{literal};
             exit;
         }
         return;
@@ -161,6 +162,11 @@ sub fire_request {
                 print "header[$i] ", encode_json($msg->header), "\n";
                 print "data[$i] ", $msg->data, "\n";
                 print "error[$i] ", $msg->error, "\n" if $msg->error;
+            }
+
+            if ($p{literal}) {
+                local $| = 1;
+                print $msg->data;
             }
 
             $pending--;
