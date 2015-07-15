@@ -24,6 +24,8 @@ Node dependencies
 Run Hello World
 ---------------
 
+    node js/script/cache-manager.js
+    node examples/hello_world_service.js
     node examples/hello_world_service.js
 
 Using Vagrant with VirtualBox Provider
