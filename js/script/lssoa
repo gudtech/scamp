@@ -1,0 +1,6 @@
+var soa = require('../lib/index.js');
+var mgr = soa.module('util/serviceMgr').create({ cached: true });
+
+mgr.listActions().forEach(function (ab) {
+    console.log(ab[0]);
+});

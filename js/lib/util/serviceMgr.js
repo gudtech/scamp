@@ -4,6 +4,7 @@
 var soa        = require('../index.js'),
     util       = require('util'),
     EventEmitter = require('events').EventEmitter,
+    crypto     = require('crypto'),
     serviceCls = soa.module('handle/service');
 
 var timeoutMultiplier = 2.1;
@@ -21,6 +22,7 @@ util.inherits(Registration, EventEmitter);
 
 Registration.prototype.refresh = function () {
     if (this.timer) clearTimeout( this.timer );
+    if (this.service.permanent) return;
 
     var me = this;
     me.timer = setTimeout( function () { me.emit('timeout'); }, parseInt( me.service.sendInterval ) * timeoutMultiplier );
@@ -46,26 +48,71 @@ function Manager( params ){
     var me = this;
     EventEmitter.call(this);
 
-    me._sector = params.sector || 'main';
+    me._sector = params.sector;
     me._registry = {};
     me._cached = {};
     me._seenTimestamps = {};
 
     me._actionIndex   = {};
+
+    if (params.cached) this._loadCache();
 }
 util.inherits(Manager, EventEmitter);
 
-Manager.prototype.registerService = function( text, fingerprint ){
+Manager.prototype._loadCache = function() {
+    var path = soa.config().val('discovery.cache_path');
+    var limit = soa.config().val('discovery.cache_max_age', 120);
+    var fs = require('fs');
+    var stat = fs.statSync(path);
+    if (Date.now() - stat.mtime.getTime() > 1000 * limit) soa.fatal('Stale discovery cache');
+
+    var buf = fs.readFileSync(path, 'utf8');
+    var chunks = buf.split(/\n%%%\n/);
+    chunks.shift();
+
+    for (var i = 0; i < chunks.length; i++) {
+        this.registerService(chunks[i], true);
+    }
+};
+
+Manager.prototype.registerService = function(blob, permanent) {
+    var me = this;
+    //console.log('received data ' + blob.toString());
+
+    //var start = (new Date).getTime();
+    try{
+        var chunks = blob.toString('binary').split('\n\n');
+        var data = chunks[0];
+        var cert = chunks[1] + '\n';
+        var sig  = new Buffer(chunks[2], 'base64');
+
+        var cert_der = new Buffer(cert.toString().replace(/---[^\n]+---\n/g,''), 'base64');
+        var sha1 = crypto.createHash('sha1').update(cert_der).digest('hex');
+        var fingerprint = sha1.replace(/..(?!$)/g, '$&:').toUpperCase();
+
+        if (!crypto.createVerify('sha256').update(data).verify(cert.toString(), sig))
+            throw 'Invalid signature';
+
+        this.registerService2( data, fingerprint, permanent );
+    } catch(e){
+        soa.error('Failed to parse announcement', e, e.stack );
+    }
+    //console.log('parseRef took', (new Date).getTime() - start , 'ms');
+};
+
+// permanent disables all timestamp logic, used when talking to a scoreboard file or circular server
+Manager.prototype.registerService2 = function( text, fingerprint, permanent ){
     var me   = this;
-    var key = fingerprint + text; // note: fingerprint is fixed length 20*3-1
+    var key = fingerprint + '$' + text;
     if (me._cached[key]) {
         me._cached[key].refresh(); // delay timeout
         return; // no reindexing or reparsing
     }
 
     var svinfo = serviceCls.create( text, fingerprint );
+    svinfo.permanent = permanent;
     if (svinfo.badVersion) return; // not for us
-    if (svinfo.timestamp < me._seenTimestamps[svinfo.workerIdent]) throw "timestamp "+svinfo.timestamp+" is not the most recent for "+svinfo.workerIdent;
+    if (!permanent && svinfo.timestamp < me._seenTimestamps[svinfo.workerIdent]) throw "timestamp "+svinfo.timestamp+" is not the most recent for "+svinfo.workerIdent;
     me._seenTimestamps[svinfo.workerIdent] = svinfo.timestamp;
 
     var reg = me._registry[ svinfo.workerIdent ];
@@ -117,18 +164,19 @@ Manager.prototype._index = function (reg, insert) {
     //console.log((insert ? 'Reg' : 'Dereg') + 'istrations for', name);
 
     service.actions.forEach(function (info) {
-        if (info.sector !== me._sector) return;
+        if (me._sector !== undefined && info.sector !== me._sector) return;
+        if (info.sector.indexOf(':') >= 0 || info.name.indexOf('.') >= 0) return;
         var aname   = info.namespace + '.' + info.name;
         var block   = [ name, reg, aname, info.version, info.flags, info.envelopes ];
 
-        if (insert && !service.authorized(me._sector, aname))
+        if (insert && !service.authorized(info.sector, aname))
             return;
 
-        me._baseIndex(me._actionIndex, aname + '.v' + info.version, name, insert && block);
+        me._baseIndex(me._actionIndex, info.sector + ':' + aname + '.v' + info.version, name, insert && block);
 
         block[4].forEach(function (crud_tag) {
             if (alias_tags.indexOf(crud_tag) >= 0)
-                me._baseIndex(me._actionIndex, info.namespace + '._' + crud_tag + '.v' + info.version, name, insert && block);
+                me._baseIndex(me._actionIndex, info.sector + ':' + info.namespace + '._' + crud_tag + '.v' + info.version, name, insert && block);
         });
     });
 };
@@ -140,7 +188,7 @@ Manager.prototype.findAction = function( action, envelope, version, ident) {
     if( !envelope ) throw "protocol is required";
     version = Number(version) || 1;
 
-    var list = me._actionIndex[ String(action).toLowerCase() + '.v' + version ]; // XXX name mangling
+    var list = me._actionIndex[ me._sector + ':' + String(action).toLowerCase() + '.v' + version ]; // XXX name mangling
     if(!list) return null;
 
 

@@ -56,33 +56,9 @@ function Observer ( params ){
                 // soa.error('Failed to decompress announcement', err);
                 ucblob = blob;
             }
-            me.parseText(ucblob);
+            me.serviceMgr.registerService( ucblob.toString('binary'), false );
         });
     });
 }
 inherits(Observer, EventEmitter);
 
-Observer.prototype.parseText = function( blob ) {
-    var me = this;
-    //console.log('received data ' + blob.toString());
-
-    //var start = (new Date).getTime();
-    try{
-        var chunks = blob.toString('binary').split('\n\n');
-        var data = chunks[0];
-        var cert = chunks[1] + '\n';
-        var sig  = new Buffer(chunks[2], 'base64');
-
-        var cert_der = new Buffer(cert.toString().replace(/---[^\n]+---\n/g,''), 'base64');
-        var sha1 = crypto.createHash('sha1').update(cert_der).digest('hex');
-        var fingerprint = sha1.replace(/..(?!$)/g, '$&:').toUpperCase();
-
-        if (!crypto.createVerify('sha256').update(data).verify(cert.toString(), sig))
-            throw 'Invalid signature';
-
-        me.serviceMgr.registerService( data, fingerprint );
-    } catch(e){
-        soa.error('Failed to parse announcement', e, e.stack );
-    }
-    //console.log('parseRef took', (new Date).getTime() - start , 'ms');
-};

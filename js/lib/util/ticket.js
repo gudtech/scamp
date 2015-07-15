@@ -1,8 +1,7 @@
-var soa = require('scamp'),
+var soa = require('../index.js'),
     crypto = require('crypto'),
     fs = require('fs'),
-    string = require('./string'), // TODO: better naming
-    pubkey = fs.readFileSync('/etc/SCAMP/auth/ticket_verify_public_key.pem');
+    string = require('./string'); // TODO: better naming
 
 function Ticket() {
     this.requester = soa.requester({ ident: 'scamp-ticket' });
@@ -14,6 +13,8 @@ module.exports = new Ticket();
 
 Ticket.prototype.verify = function (ticket) {
     if (!ticket) return null;
+
+    var pubkey = fs.readFileSync('/etc/SCAMP/auth/ticket_verify_public_key.pem');
 
     ticket = string.safeStr(ticket);
 

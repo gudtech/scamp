@@ -111,4 +111,6 @@ UpgradeLog*.XML
 perl/blib/
 MYMETA.json
 perl/pm_to_blib
+
+# node stuff
 node_modules/

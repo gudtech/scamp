@@ -1,7 +1,7 @@
 'use strict';
 
-var scamp = require('scamp'),
-    svc = soa.service({ tag: 'helloworld' });
+var scamp = require(process.cwd() + "/../scamp/"),
+    svc = scamp.service({ tag: 'helloworld' });
 
 svc.registerAction('helloworld.hello', 'noauth', svc.staticJsonHandler(function(ticket, data, return_handler) {
 
