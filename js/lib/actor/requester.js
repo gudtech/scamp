@@ -15,7 +15,7 @@ function Requester(params){
     me.ident = params.ident;
     me.sector = params.sector;
     
-    me.serviceMgr = soa.module('util/serviceMgr').create({ sector: params.sector });
+    me.serviceMgr = soa.module('util/serviceMgr').create({ sector: params.sector || 'main' });
     me.observer   = soa.module('discovery/observe').create({ serviceMgr: me.serviceMgr });
     
 };
