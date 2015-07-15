@@ -158,7 +158,7 @@ var alias_tags = ['create', 'read', 'update', 'destroy'];
 Manager.prototype._index = function (reg, insert) {
     var me   = this,
         service = reg.service,
-        name = service.workerIdent;
+        name = service.workerIdent; // This includes the fingerprint
 
     me._registry[ name ] = insert && reg;
     //console.log((insert ? 'Reg' : 'Dereg') + 'istrations for', name);
@@ -167,7 +167,7 @@ Manager.prototype._index = function (reg, insert) {
         if (me._sector !== undefined && info.sector !== me._sector) return;
         if (info.sector.indexOf(':') >= 0 || info.name.indexOf('.') >= 0) return;
         var aname   = info.namespace + '.' + info.name;
-        var block   = [ name, reg, aname, info.version, info.flags, info.envelopes ];
+        var block   = { reg: reg, info: info };
 
         if (insert && !service.authorized(info.sector, aname))
             return;
@@ -198,8 +198,9 @@ Manager.prototype.findAction = function( action, envelope, version, ident) {
 
     // this is a little bit weak sauce
     Object.keys(list).forEach(function (k) {
-        if (list[k][5].indexOf(envelope) >= 0 && (!ident || ident == list[k][1].service.workerIdent)) {
-            (list[k][1].isFailed() ? failing : filtered).push(list[k]);
+        var ll = list[k];
+        if (ll.info.envelopes.indexOf(envelope) >= 0 && (!ident || ident == ll.reg.service.workerIdent)) {
+            (ll.reg.isFailed() ? failing : filtered).push(ll);
         }
     });
 
@@ -209,14 +210,14 @@ Manager.prototype.findAction = function( action, envelope, version, ident) {
     item = filtered[ Math.floor( Math.random() * filtered.length ) ];
 
     var timeout = soa.config().val('rpc.timeout', 75);
-    item[4].forEach( function (f) { if (/^t\d+$/.test(f)) timeout = +f.substring(1); } );
+    item.info.flags.forEach( function (f) { if (/^t\d+$/.test(f)) timeout = +f.substring(1); } );
     return {
-        action: item[2],
-        version: item[3],
-        flags: item[4],
-        address: item[1].service.address,
-        fingerprint: item[1].service.fingerprint,
-        service: item[1].service,
+        action: item.info.namespace + '.' + item.info.name,
+        version: item.info.version,
+        flags: item.info.flags,
+        address: item.reg.service.address,
+        fingerprint: item.reg.service.fingerprint,
+        service: item.reg.service,
         timeout: timeout * 1000,
     };
 };
@@ -229,7 +230,7 @@ Manager.prototype.listActions = function () {
         var name, block;
         for (name in me._actionIndex[key]) { block = me._actionIndex[key][name]; break; }
 
-        actions.push([block[2], block[3]]);
+        actions.push([block.info.namespace + '.' + block.info.name, block.info.version]);
     });
 
     return actions;

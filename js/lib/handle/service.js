@@ -45,7 +45,7 @@ function Service( text, fingerprint ) {
     if (typeof ref.vmaj !== 'number' || !(ref.vmaj <= 4)) { me.badVersion = true; return; }
     if (typeof ref.ident !== 'string') throw 'workerIdent is required';
 
-    me.workerIdent = fingerprint + ref.ident;
+    me.workerIdent = fingerprint + '$' + ref.ident;
     me.address = ref.uri;
     me.weight = ref.wgt;
     me.sendInterval = ref.intvl;
