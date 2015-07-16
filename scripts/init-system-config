@@ -1,3 +1,4 @@
 #!/bin/bash 
 
+echo "discovery.cache_path = /tmp/discovery.cache"
 echo "bus.authorized_services = /etc/SCAMP/authorized_services" > /etc/SCAMP/soa.conf
