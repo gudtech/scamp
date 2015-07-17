@@ -1,8 +1,8 @@
 package scamp
 
-import "fmt"
-import "testing"
+// import "fmt"
+// import "testing"
 
-func TestStuff(t *testing.T){
-  fmt.Printf("hey!")
-}
+// func TestStuff(t *testing.T){
+//   fmt.Printf("hey!")
+// }
