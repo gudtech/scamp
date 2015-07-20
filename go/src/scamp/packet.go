@@ -24,7 +24,7 @@ type Packet struct {
 
 type PacketType int
 const (
-  HEADER = iota
+  HEADER PacketType = iota
   DATA
   EOF
   TXERR
@@ -33,7 +33,7 @@ const (
 
 type EnvelopeFormat int
 const (
-  ENVELOPE_JSON = iota
+  ENVELOPE_JSON EnvelopeFormat = iota
   ENVELOPE_JSONSTORE
 )
 

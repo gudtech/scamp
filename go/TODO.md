@@ -1,0 +1,6 @@
+ - [ ] Set up Go project
+ - [ ] Parse high-level packets to TYPE/MSGNO/BODY
+ - [ ] Parse a header's JSON blob
+ - [ ] TLS session setup
+ - [ ] cert verification
+ - [ ] 
