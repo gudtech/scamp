@@ -51,7 +51,7 @@ func TestFailGarbage(t *testing.T){
     t.Errorf("expected non-nil err", err)
     t.FailNow()
   }
-  if(fmt.Sprintf("%s", err) != "header must have 3 parts") {
+  if(fmt.Sprintf("%s", err) != "EOF") {
     t.Errorf("expected `%s`, got `%s`", "header must have 3 parts", err)
     t.FailNow()
   }
@@ -65,8 +65,8 @@ func TestFailHeaderParams(t *testing.T){
     t.Errorf("expected non-nil err", err)
     t.FailNow()
   }
-  if(fmt.Sprintf("%s", err) != "header must have 3 parts") {
-    t.Errorf("expected `%s`, got `%s`", "header must have 3 parts", err)
+  if(fmt.Sprintf("%s", err) != "expected integer") {
+    t.Errorf("expected `%s`, got `%s`", "expected integer", err)
     t.FailNow()
   }
 }
@@ -106,6 +106,36 @@ func TestFailTooManyBodyBytes(t *testing.T){
   _,err := ReadPacket( byteReader )
   if(fmt.Sprintf("%s", err) != "packet was missing trailing bytes") {
     t.Errorf("expected `%s`, got `%s`", "packet was missing trailing bytes", err)
+    t.FailNow()
+  }
+}
+
+func TestWritePacket(t *testing.T){
+  headerHeader := PacketHeader {
+    action: "hello.helloworld",
+    envelope: ENVELOPE_JSON,
+    messageId: "0123456789012345",
+    version: 1,
+  }
+
+  packet := Packet{
+    packetType: HEADER,
+    packetMsgNo: 0,
+    packetHeader: headerHeader,
+    body: []byte(""),
+  }
+
+  expected := []byte("HEADER 0 0\n")
+
+  buf := new(bytes.Buffer)
+  _,err := packet.WritePacket(buf)
+  if err != nil {
+    t.Errorf("unexpected error while writing to buf `%s`", err)
+    t.FailNow()
+  }
+
+  if !bytes.Equal(expected, buf.Bytes()) {
+    t.Errorf("expected `%s` but got `%s`", expected, buf.Bytes())
     t.FailNow()
   }
 }

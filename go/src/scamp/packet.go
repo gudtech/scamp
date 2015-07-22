@@ -31,34 +31,81 @@ const (
   ACK
 )
 
-type EnvelopeFormat int
-const (
-  ENVELOPE_JSON EnvelopeFormat = iota
-  ENVELOPE_JSONSTORE
-)
-
-// type MessageType int
-// const (
-//   REQUEST = iota
-//   REPLY
-// )
-
-type PacketHeader struct {
-  action string           `json:"action"`           // request
-  envelope EnvelopeFormat `json:"envelope"`         // request
-  // error  string           `json:"error"`            // reply
-  // error_code []byte       `json:"error_code"`   // reply
-  // messageId []byte        `json:"message_id"`    // both
-  // station []byte          `json:"station"`         // request
-  // ticket []byte           `json:"ticket"`           // request
-  // messageType []byte      `json:"message_type"` // both
-  version int64           `json:"version"`            // request
-}
+var HEADER_BYTES = []byte("HEADER")
+var DATA_BYTES = []byte("DATA")
+var EOF_BYTES = []byte("EOF")
+var TXERR_BYTES = []byte("TXERR")
+var ACK_BYTES = []byte("ACK")
 
 /*
   Will parse an io stream in to a packet struct
 */
 func ReadPacket(reader io.Reader) (Packet,error) {
+  var pktTypeBytes []byte
+  var bodyBytesNeeded int
+
+  pkt := Packet{}
+
+  _,err := fmt.Fscanf(reader, "%s %d %d\n", &pktTypeBytes, &(pkt.packetMsgNo), &bodyBytesNeeded)
+  if err != nil {
+    return Packet{}, err
+  }
+
+  // TODO these bytes should be moved to a const
+  if bytes.Equal(HEADER_BYTES, pktTypeBytes) {
+    pkt.packetType = HEADER
+  } else if bytes.Equal(DATA_BYTES, pktTypeBytes) {
+    pkt.packetType = DATA
+  } else if bytes.Equal(EOF_BYTES, pktTypeBytes) {
+    pkt.packetType = EOF
+  } else if bytes.Equal(TXERR_BYTES, pktTypeBytes) {
+    pkt.packetType = TXERR
+  } else if bytes.Equal(ACK_BYTES, pktTypeBytes) {
+    pkt.packetType = ACK
+  } else {
+    return Packet{}, errors.New( fmt.Sprintf("unknown packet type `%s`", pktTypeBytes) )
+  }
+
+  bufRdr := bufio.NewReader(reader)
+
+  // Use the msg len to consume the rest of the connection
+  bodyBuf := make([]byte, bodyBytesNeeded)
+  bytesRead := 0
+  for {
+    bytesReadNow, err := bufRdr.Read(bodyBuf[bytesRead:bodyBytesNeeded])
+
+    if err != nil {
+      return Packet{}, err
+    }
+    bytesRead = bytesRead + bytesReadNow
+
+    if bodyBytesNeeded - bytesRead == 0 {
+      break
+    }
+  }
+  pkt.body = bodyBuf
+
+  theRest := make([]byte, THE_REST_SIZE)
+  bytesRead,err = bufRdr.Read(theRest)
+  if bytesRead != THE_REST_SIZE || !bytes.Equal(theRest, []byte("END\r\n")) {
+    return Packet{}, errors.New("packet was missing trailing bytes")
+  }
+
+  if pkt.packetType == HEADER {
+    err := pkt.ParseHeaderManual()
+    // err := pkt.ParseHeaderReflection()
+    if err != nil {
+      return Packet{}, err
+    }
+  }
+
+  return pkt,nil
+}
+
+// Stefan thought I might need more fine-grained
+// buffer control so I'm leaving this here for now
+// until integration tests show its need one way or another
+func ReadPacketDeprecated(reader io.Reader) (Packet,error) {
   bufRdr := bufio.NewReader(reader)
 
   pkt := Packet{}
@@ -78,15 +125,15 @@ func ReadPacket(reader io.Reader) (Packet,error) {
   }
 
   // TODO these bytes should be moved to a const
-  if bytes.Equal([]byte("HEADER"), hdrChunks[0]) {
+  if bytes.Equal(HEADER_BYTES, hdrChunks[0]) {
     pkt.packetType = HEADER
-  } else if bytes.Equal([]byte("DATA"), hdrChunks[0]) {
+  } else if bytes.Equal(DATA_BYTES, hdrChunks[0]) {
     pkt.packetType = DATA
-  } else if bytes.Equal([]byte("EOF"), hdrChunks[0]) {
+  } else if bytes.Equal(EOF_BYTES, hdrChunks[0]) {
     pkt.packetType = EOF
-  } else if bytes.Equal([]byte("TXERR"), hdrChunks[0]) {
+  } else if bytes.Equal(TXERR_BYTES, hdrChunks[0]) {
     pkt.packetType = TXERR
-  } else if bytes.Equal([]byte("ACK"), hdrChunks[0]) {
+  } else if bytes.Equal(ACK_BYTES, hdrChunks[0]) {
     pkt.packetType = ACK
   } else {
     return Packet{}, errors.New(fmt.Sprintf("unknown packet type `%s`", hdrChunks[0]))
@@ -190,6 +237,23 @@ func (pkt *Packet)ParseHeaderReflection() (err error) {
   pkt.packetHeader = header
 
   err = json.Unmarshal(pkt.body, &header)
+  if err != nil {
+    return
+  }
+
+  return
+}
+
+
+
+func (pkt *Packet)WritePacket(writer io.Writer) (written int, err error){
+  var packet_type_bytes []byte
+  switch pkt.packetType {
+    case HEADER: 
+      packet_type_bytes = HEADER_BYTES
+  } 
+
+  written, err = fmt.Fprintf(writer, "%s %d %d\n", packet_type_bytes, pkt.packetMsgNo, len(pkt.body))
   if err != nil {
     return
   }
