@@ -1,6 +1,14 @@
- - [ ] Set up Go project
- - [ ] Parse high-level packets to TYPE/MSGNO/BODY
- - [ ] Parse a header's JSON blob
- - [ ] TLS session setup
- - [ ] cert verification
- - [ ] 
+ - [*] Setup Go project
+ - [*] TLS session setup
+ - [*] cert verification
+ - [ ] Parse packet
+ - [*] Generate packet
+ - [ ] Parse request
+ - [*] Generate request
+   - [*] Generate request header JSON
+ - [ ] Parse reply
+ - [ ] Generate reply
+ - [ ] Manage connection msgno
+ - [ ] Fix bug where sending envelope type `JSON` fails silently (should at least emit 'unknown type' to STDERR)
+ - [ ] Fix reference to documentation `message_id` which should read `request_id`
+ - [ ] Move to interface design. Message parts which implement `Packet` so we can specialize `Header` vs `Data` which have different bodies from different data types.

@@ -41,5 +41,10 @@ func (req *Request) ToPackets() []Packet {
     packetMsgNo: 0,
   }
 
-  return []Packet{ headerPacket }
+  eofPacket := Packet{
+    packetType: EOF,
+    packetMsgNo: 0,
+  }
+
+  return []Packet{ headerPacket, eofPacket }
 }

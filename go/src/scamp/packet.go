@@ -252,14 +252,24 @@ func (pkt *Packet)Write(writer io.Writer) (err error){
   switch pkt.packetType {
     case HEADER: 
       packet_type_bytes = HEADER_BYTES
+    case EOF:
+      packet_type_bytes = EOF_BYTES
   } 
 
+  var bodyBytes []byte
+  bodyBytes = []byte("")
+
   bodyBuf := new(bytes.Buffer)
-  err = pkt.packetHeader.Write(bodyBuf)
-  if err != nil {
-    return
+  // TODO this is why you use pointers so you can
+  // carry nil values...
+  emptyHeader := PacketHeader{}
+  if pkt.packetHeader != emptyHeader {
+    err = pkt.packetHeader.Write(bodyBuf)
+    if err != nil {
+      return
+    }
+    bodyBytes = bodyBuf.Bytes()
   }
-  bodyBytes := bodyBuf.Bytes()
 
   _,err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.packetMsgNo, len(bodyBytes))
   if err != nil {

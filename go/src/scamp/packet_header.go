@@ -15,7 +15,7 @@ const (
   ENVELOPE_JSONSTORE
 )
 
-var ENVELOPE_JSON_BYTES = []byte(`"JSON"`)
+var ENVELOPE_JSON_BYTES = []byte(`"json"`)
 var ENVELOPE_JSONSTORE_BYTES = []byte(`"JSONSTORE"`)
 
 func (envFormat EnvelopeFormat) MarshalJSON() (retval []byte, err error) { 
@@ -64,7 +64,7 @@ type PacketHeader struct {
   Envelope EnvelopeFormat `json:"envelope"`         // request
   // error  string        `json:"error"`            // reply
   // error_code []byte    `json:"error_code"`   // reply
-  MessageId string        `json:"message_id"`    // both
+  MessageId string        `json:"request_id"`    // both
   // station []byte       `json:"station"`         // request
   // ticket []byte        `json:"ticket"`           // request
   MessageType MessageType `json:"type"` // both

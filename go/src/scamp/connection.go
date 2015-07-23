@@ -10,15 +10,16 @@ import "crypto/tls"
 type Connection struct {
   conn *tls.Conn
   Fingerprint string
+  msgCnt int64
 }
 
-func (conn *Connection)Connect() (err error) {
+func (conn *Connection)Connect(connspec string) (err error) {
   config := &tls.Config{
     InsecureSkipVerify: true,
   }
   config.BuildNameToCertificate()
 
-  conn.conn, err = tls.Dial("tcp", "192.168.1.138:30101", config)
+  conn.conn, err = tls.Dial("tcp", connspec, config)
   if err != nil {
     return
   }
@@ -44,6 +45,16 @@ func (conn *Connection)SendRequest(req Request) (err error) {
     }
   }
 
-
   return
+}
+
+func (conn *Connection)RecvReply() Reply {
+  reply := Reply{}
+  reply.Read(conn.conn)
+
+  return reply
+}
+
+func (conn *Connection)Close() {
+  conn.conn.Close()
 }

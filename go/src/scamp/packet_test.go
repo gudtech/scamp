@@ -110,7 +110,7 @@ func TestFailTooManyBodyBytes(t *testing.T){
   }
 }
 
-func TestWritePacket(t *testing.T){
+func TestWriteHeaderPacket(t *testing.T){
   packet := Packet{
     packetType: HEADER,
     packetMsgNo: 0,
@@ -123,6 +123,27 @@ func TestWritePacket(t *testing.T){
     body: []byte(""),
   }
   expected := []byte("HEADER 0 109\r\n{\"action\":\"hello.helloworld\",\"envelope\":\"JSON\",\"message_id\":\"0123456789012345\",\"type\":\"REQUEST\",\"version\":1}\nEND\r\n")
+
+  buf := new(bytes.Buffer)
+  err := packet.Write(buf)
+  if err != nil {
+    t.Errorf("unexpected error while writing to buf `%s`", err)
+    t.FailNow()
+  }
+
+  if !bytes.Equal(expected, buf.Bytes()) {
+    t.Errorf("expected\n`%s`\n`%v`\ngot\n`%s`\n`%v`\n", expected, expected, buf.Bytes(), buf.Bytes())
+    t.FailNow()
+  }
+}
+
+func TestWriteEofPacket(t *testing.T) {
+  packet := Packet{
+    packetType: EOF,
+    packetMsgNo: 0,
+    body: []byte(""),
+  }
+  expected := []byte("EOF 0 0\r\nEND\r\n")
 
   buf := new(bytes.Buffer)
   err := packet.Write(buf)
