@@ -1,2 +1,56 @@
 package scamp
 
+import "testing"
+// import "bytes"
+// import "fmt"
+
+func TestGenerateMessageId(t *testing.T){
+  req := Request {}
+  req.GenerateMesageId()
+  if req.MessageId == "" || len(req.MessageId) != 18 {
+    t.Errorf("MesasageId should have been 18-byte string but got `%s`", req.MessageId)
+    t.FailNow()
+  }
+}
+
+func TestRequestToPacket(t *testing.T){
+  req := Request {
+    Action: "hello.helloworld",
+    EnvelopeFormat: ENVELOPE_JSON,
+    Version: 1,
+  }
+
+  if req.MessageId != "" {
+    t.Errorf("expected new req to have empty MessageId")
+    t.FailNow()
+  }
+
+  pkts := req.ToPackets()
+  if len(pkts) != 1 {
+    t.Errorf("expected 1 packet")
+    t.FailNow()
+  }
+  if req.MessageId == "" {
+    t.Errorf("expected req to have MessageId")
+    t.FailNow()
+  }
+
+  hdrPkt := pkts[0]
+  if hdrPkt.packetType != HEADER {
+    t.Errorf("expected HEADER type")
+    t.FailNow()
+  }
+  if hdrPkt.packetMsgNo != 0 {
+    t.Errorf("header msgNo was %d but expected %d", hdrPkt.packetMsgNo, 0)
+    t.FailNow()
+  }
+  expectedHeader := PacketHeader{
+    Action: "hello.helloworld",
+    Version: 1,
+    MessageId: req.MessageId,
+  }
+  if hdrPkt.packetHeader != expectedHeader {
+    t.Errorf("packetHeader was `%v` but expected `%v`", hdrPkt.packetHeader, expectedHeader)
+    t.FailNow()
+  }
+}

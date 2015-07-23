@@ -28,16 +28,16 @@ func TestReadPacketOK(t *testing.T){
     t.Errorf("header was not parsed")
     t.FailNow()
   }
-  if header.version != 1 {
-    t.Errorf("expected header.version to be 1 but got %d", header.version)
+  if header.Version != 1 {
+    t.Errorf("expected header.version to be 1 but got %d", header.Version)
     t.FailNow()
   }
-  if header.action != "foo" {
-    t.Errorf("expected header.action to be `foo` but got `%s`", header.action)
+  if header.Action != "foo" {
+    t.Errorf("expected header.action to be `foo` but got `%s`", header.Action)
     t.FailNow()
   }
-  if header.envelope != ENVELOPE_JSON {
-    t.Errorf("expected header.envelope to be ENVELOPE_JSON (%d) but got %d", ENVELOPE_JSON, header.envelope)
+  if header.Envelope != ENVELOPE_JSON {
+    t.Errorf("expected header.envelope to be ENVELOPE_JSON (%d) but got %d", ENVELOPE_JSON, header.Envelope)
     t.FailNow()
   }
 }
@@ -111,31 +111,28 @@ func TestFailTooManyBodyBytes(t *testing.T){
 }
 
 func TestWritePacket(t *testing.T){
-  headerHeader := PacketHeader {
-    action: "hello.helloworld",
-    envelope: ENVELOPE_JSON,
-    messageId: "0123456789012345",
-    version: 1,
-  }
-
   packet := Packet{
     packetType: HEADER,
     packetMsgNo: 0,
-    packetHeader: headerHeader,
+    packetHeader: PacketHeader {
+      Action: "hello.helloworld",
+      Envelope: ENVELOPE_JSON,
+      MessageId: "0123456789012345",
+      Version: 1,
+    },
     body: []byte(""),
   }
-
-  expected := []byte("HEADER 0 0\n")
+  expected := []byte("HEADER 0 109\r\n{\"action\":\"hello.helloworld\",\"envelope\":\"JSON\",\"message_id\":\"0123456789012345\",\"type\":\"REQUEST\",\"version\":1}\nEND\r\n")
 
   buf := new(bytes.Buffer)
-  _,err := packet.WritePacket(buf)
+  err := packet.Write(buf)
   if err != nil {
     t.Errorf("unexpected error while writing to buf `%s`", err)
     t.FailNow()
   }
 
   if !bytes.Equal(expected, buf.Bytes()) {
-    t.Errorf("expected `%s` but got `%s`", expected, buf.Bytes())
+    t.Errorf("expected\n`%s`\n`%v`\ngot\n`%s`\n`%v`\n", expected, expected, buf.Bytes(), buf.Bytes())
     t.FailNow()
   }
 }

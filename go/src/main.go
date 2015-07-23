@@ -19,4 +19,6 @@ func main() {
   }
   packets := request.ToPackets()
   fmt.Printf("packets len: %d\n", len(packets) )
+
+  conn.SendRequest(request)
 }

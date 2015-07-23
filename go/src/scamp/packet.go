@@ -36,6 +36,7 @@ var DATA_BYTES = []byte("DATA")
 var EOF_BYTES = []byte("EOF")
 var TXERR_BYTES = []byte("TXERR")
 var ACK_BYTES = []byte("ACK")
+var THE_REST_BYTES = []byte("END\r\n")
 
 /*
   Will parse an io stream in to a packet struct
@@ -198,7 +199,7 @@ func (pkt *Packet)ParseHeaderManual() (err error) {
   if err != nil {
     return err
   } else {
-    header.action = action
+    header.Action = action
   }
 
   var version int64
@@ -206,7 +207,7 @@ func (pkt *Packet)ParseHeaderManual() (err error) {
   if err != nil {
     return err
   } else {
-    header.version = version
+    header.Version = version
   }
 
   var envelope string
@@ -216,9 +217,9 @@ func (pkt *Packet)ParseHeaderManual() (err error) {
   } else {
     switch envelope {
     case "json":
-      header.envelope = ENVELOPE_JSON
+      header.Envelope = ENVELOPE_JSON
     case "jsonstore":
-      header.envelope = ENVELOPE_JSONSTORE
+      header.Envelope = ENVELOPE_JSONSTORE
     default:
       return errors.New( fmt.Sprintf("envelope `%s` is not valid", envelope) )
     }
@@ -246,17 +247,30 @@ func (pkt *Packet)ParseHeaderReflection() (err error) {
 
 
 
-func (pkt *Packet)WritePacket(writer io.Writer) (written int, err error){
+func (pkt *Packet)Write(writer io.Writer) (err error){
   var packet_type_bytes []byte
   switch pkt.packetType {
     case HEADER: 
       packet_type_bytes = HEADER_BYTES
   } 
 
-  written, err = fmt.Fprintf(writer, "%s %d %d\n", packet_type_bytes, pkt.packetMsgNo, len(pkt.body))
+  bodyBuf := new(bytes.Buffer)
+  err = pkt.packetHeader.Write(bodyBuf)
   if err != nil {
     return
   }
+  bodyBytes := bodyBuf.Bytes()
+
+  _,err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.packetMsgNo, len(bodyBytes))
+  if err != nil {
+    return
+  }
+  _,err = writer.Write(bodyBytes)
+  if err != nil {
+    return
+  }
+
+  _,err = writer.Write(THE_REST_BYTES)
 
   return
 }
