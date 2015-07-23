@@ -52,7 +52,6 @@ func ReadPacket(reader io.Reader) (Packet,error) {
     return Packet{}, err
   }
 
-  // TODO these bytes should be moved to a const
   if bytes.Equal(HEADER_BYTES, pktTypeBytes) {
     pkt.packetType = HEADER
   } else if bytes.Equal(DATA_BYTES, pktTypeBytes) {
@@ -81,88 +80,6 @@ func ReadPacket(reader io.Reader) (Packet,error) {
     bytesRead = bytesRead + bytesReadNow
 
     if bodyBytesNeeded - bytesRead == 0 {
-      break
-    }
-  }
-  pkt.body = bodyBuf
-
-  theRest := make([]byte, THE_REST_SIZE)
-  bytesRead,err = bufRdr.Read(theRest)
-  if bytesRead != THE_REST_SIZE || !bytes.Equal(theRest, []byte("END\r\n")) {
-    return Packet{}, errors.New("packet was missing trailing bytes")
-  }
-
-  if pkt.packetType == HEADER {
-    err := pkt.ParseHeaderManual()
-    // err := pkt.ParseHeaderReflection()
-    if err != nil {
-      return Packet{}, err
-    }
-  }
-
-  return pkt,nil
-}
-
-// Stefan thought I might need more fine-grained
-// buffer control so I'm leaving this here for now
-// until integration tests show its need one way or another
-func ReadPacketDeprecated(reader io.Reader) (Packet,error) {
-  bufRdr := bufio.NewReader(reader)
-
-  pkt := Packet{}
-
-  hdr,isPrefix,err := bufRdr.ReadLine()
-  if err != nil {
-    return Packet{},err
-  }
-  if isPrefix {
-    return Packet{}, errors.New("header read was short. bailing out now.")
-  }
-
-  // Parse the header
-  hdrChunks := bytes.Split(hdr, []byte(" "))
-  if len(hdrChunks) != 3 {
-    return Packet{}, errors.New("header must have 3 parts")
-  }
-
-  // TODO these bytes should be moved to a const
-  if bytes.Equal(HEADER_BYTES, hdrChunks[0]) {
-    pkt.packetType = HEADER
-  } else if bytes.Equal(DATA_BYTES, hdrChunks[0]) {
-    pkt.packetType = DATA
-  } else if bytes.Equal(EOF_BYTES, hdrChunks[0]) {
-    pkt.packetType = EOF
-  } else if bytes.Equal(TXERR_BYTES, hdrChunks[0]) {
-    pkt.packetType = TXERR
-  } else if bytes.Equal(ACK_BYTES, hdrChunks[0]) {
-    pkt.packetType = ACK
-  } else {
-    return Packet{}, errors.New(fmt.Sprintf("unknown packet type `%s`", hdrChunks[0]))
-  }
-
-  parsedMsgNo, err := strconv.ParseInt(string(hdrChunks[1]), 10, 64)
-  if err != nil {
-    return Packet{}, err
-  }
-  pkt.packetMsgNo = parsedMsgNo
-
-  bodyBytesNeeded, err := strconv.ParseInt(string(hdrChunks[2]), 10, 64)
-  if err != nil {
-    return Packet{}, err
-  }
-
-  // Use the msg len to consume the rest of the connection
-  bodyBuf := make([]byte, bodyBytesNeeded)
-  bytesRead := 0
-  for {
-    bytesReadNow, err := bufRdr.Read(bodyBuf[bytesRead:bodyBytesNeeded])
-
-    if err != nil {
-      return Packet{}, err
-    }
-    bytesRead = bytesRead + bytesReadNow
-
-    if (bodyBytesNeeded - int64(bytesRead)) == 0 {
       break
     }
   }
