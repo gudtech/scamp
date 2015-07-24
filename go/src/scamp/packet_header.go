@@ -4,6 +4,7 @@ import "io"
 import "encoding/json"
 import "errors"
 import "fmt"
+import "bytes"
 
 /******
   ENVELOPE FORMAT
@@ -16,7 +17,7 @@ const (
 )
 
 var ENVELOPE_JSON_BYTES = []byte(`"json"`)
-var ENVELOPE_JSONSTORE_BYTES = []byte(`"JSONSTORE"`)
+var ENVELOPE_JSONSTORE_BYTES = []byte(`"jsonstore"`)
 
 func (envFormat EnvelopeFormat) MarshalJSON() (retval []byte, err error) { 
   switch envFormat {
@@ -29,6 +30,17 @@ func (envFormat EnvelopeFormat) MarshalJSON() (retval []byte, err error) {
   }
 
   return
+}
+
+func (envFormat *EnvelopeFormat) UnmarshalJSON(incoming []byte) error{
+  if bytes.Equal(ENVELOPE_JSON_BYTES, incoming) {
+    *envFormat = ENVELOPE_JSON
+  } else if bytes.Equal(ENVELOPE_JSONSTORE_BYTES, incoming) {
+    *envFormat = ENVELOPE_JSONSTORE
+  } else {
+    return errors.New(fmt.Sprintf("unknown envelope type `%s`", incoming))
+  }
+  return nil
 }
 
 /******

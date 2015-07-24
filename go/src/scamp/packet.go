@@ -9,9 +9,6 @@ import "encoding/json"
 
 const (
   THE_REST_SIZE = 5
-
-  // TODO: how to put literal byte array in const?
-  // THE_REST_BYTES = []byte("END\r\n")
 )
 
 type Packet struct {
