@@ -1,5 +1,0 @@
-package scamp
-
-// import "testing"
-
-
