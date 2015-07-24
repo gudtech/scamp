@@ -1,7 +1,7 @@
  - [*] Setup Go project
  - [*] TLS session setup
  - [*] cert verification
- - [ ] Parse packet
+ - [*] Parse packet
  - [*] Generate packet
  - [ ] Parse request
  - [*] Generate request
@@ -10,5 +10,6 @@
  - [ ] Generate reply
  - [ ] Manage connection msgno
  - [ ] Fix bug where sending envelope type `JSON` fails silently (should at least emit 'unknown type' to STDERR)
+ - [ ] Fix bug where header `"type": "REQUEST"` fails silently (should at least emit 'unknown type' to STDERR)
  - [ ] Fix reference to documentation `message_id` which should read `request_id`
  - [ ] Move to interface design. Message parts which implement `Packet` so we can specialize `Header` vs `Data` which have different bodies from different data types.
