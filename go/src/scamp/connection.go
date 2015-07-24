@@ -1,10 +1,6 @@
 package scamp
 
-// import "fmt"
 import "errors"
-
-// import "net"
-
 import "crypto/tls"
 
 type Connection struct {

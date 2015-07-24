@@ -1,6 +1,5 @@
 package scamp
 
-// import "fmt"
 import "math/rand"
 
 // TODO: Requests should come out of a request object pool

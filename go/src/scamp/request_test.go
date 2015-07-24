@@ -2,9 +2,6 @@ package scamp
 
 import "testing"
 
-// import "bytes"
-// import "fmt"
-
 func TestGenerateMessageId(t *testing.T) {
 	req := Request{}
 	req.GenerateMesageId()
