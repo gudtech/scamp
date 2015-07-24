@@ -88,7 +88,7 @@ func ReadPacket(reader io.Reader) (Packet,error) {
   }
 
   if pkt.packetType == HEADER {
-    err := pkt.ParseHeaderReflection()
+    err := pkt.ParseHeader()
     if err != nil {
       return Packet{}, err
     }
@@ -97,9 +97,7 @@ func ReadPacket(reader io.Reader) (Packet,error) {
   return pkt,nil
 }
 
-// TODO: why does reflection-based decoding
-// fail to extract any values?
-func (pkt *Packet)ParseHeaderReflection() (err error) {
+func (pkt *Packet)ParseHeader() (err error) {
   err = json.Unmarshal(pkt.body, &pkt.packetHeader)
   if err != nil {
     return
@@ -107,8 +105,6 @@ func (pkt *Packet)ParseHeaderReflection() (err error) {
 
   return
 }
-
-
 
 func (pkt *Packet)Write(writer io.Writer) (err error){
   var packet_type_bytes []byte
