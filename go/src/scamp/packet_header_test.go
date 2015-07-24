@@ -5,7 +5,7 @@ import "bytes"
 import "encoding/json"
 
 func TestEncodeEnvelope(t *testing.T){
-  expected := []byte("\"JSON\"\n")
+  expected := []byte("\"json\"\n")
 
   buf := new(bytes.Buffer)
   encoder := json.NewEncoder(buf)
@@ -30,7 +30,7 @@ func TestWritePacketHeader(t *testing.T){
     MessageId: "0123456789012345",
     Version: 1,
   }
-  expected := []byte("{\"action\":\"hello.helloworld\",\"envelope\":\"JSON\",\"message_id\":\"0123456789012345\",\"type\":\"REQUEST\",\"version\":1}\n")
+  expected := []byte("{\"action\":\"hello.helloworld\",\"envelope\":\"json\",\"request_id\":\"0123456789012345\",\"type\":\"request\",\"version\":1}\n")
 
   buf := new(bytes.Buffer)
   packetHeader.Write(buf)

@@ -122,7 +122,7 @@ func TestWriteHeaderPacket(t *testing.T){
     },
     body: []byte(""),
   }
-  expected := []byte("HEADER 0 109\r\n{\"action\":\"hello.helloworld\",\"envelope\":\"JSON\",\"message_id\":\"0123456789012345\",\"type\":\"REQUEST\",\"version\":1}\nEND\r\n")
+  expected := []byte("HEADER 0 109\r\n{\"action\":\"hello.helloworld\",\"envelope\":\"json\",\"request_id\":\"0123456789012345\",\"type\":\"request\",\"version\":1}\nEND\r\n")
 
   buf := new(bytes.Buffer)
   err := packet.Write(buf)

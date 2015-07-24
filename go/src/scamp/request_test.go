@@ -59,7 +59,7 @@ func TestHeaderRequestToPackets(t *testing.T){
     t.Errorf("expected EOF type")
     t.FailNow()
   }
-  if eofPkt.packetMsgNo != 1 {
-    t.Errorf("eof msgNo was %d but expected %d", eofPkt.packetMsgNo, 1)
+  if eofPkt.packetMsgNo != 0 {
+    t.Errorf("eof msgNo was %d but expected %d", eofPkt.packetMsgNo, 0)
   }
 }
