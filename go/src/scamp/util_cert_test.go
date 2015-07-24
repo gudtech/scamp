@@ -4,8 +4,8 @@ import "testing"
 import "crypto/x509"
 import "encoding/pem"
 
-func TestSHA1Fingerprint(t *testing.T){
-  cert_bytes := []byte(`-----BEGIN CERTIFICATE-----
+func TestSHA1Fingerprint(t *testing.T) {
+	cert_bytes := []byte(`-----BEGIN CERTIFICATE-----
 MIIGKjCCBBKgAwIBAgIJANI9UqJ99EsjMA0GCSqGSIb3DQEBBQUAMGsxHzAdBgNV
 BAMTFlhhdmllcnMtTUJQIGhlbGxvd29ybGQxEjAQBgNVBAoTCVNDQU1QIEluYzEL
 MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExEjAQBgNVBAcTCVNhbiBE
@@ -40,23 +40,23 @@ eoDrElcVEz4+qSreemp8RlYXxWTweQ0+EMWvD+IxBz0EwE6wYRs6tkD1UZksC/kz
 SeS2aJqHmX6rGSSgM7R+saS3X91I0MYbQN0kDudJb2Qi7L/VdUBwNyDSWXqtjyNR
 vTK9LN2g3yixLZdO8GeH/AjpNn3a10lGoC67ETOJsfozHxJXE2gs/qiUeoqEgg==
 -----END CERTIFICATE-----`)
-  block,_ := pem.Decode(cert_bytes)
-  if block == nil && block.Type != "CERTIFICATE" {
-    t.Errorf("expected to block to be non-nil CERTIFICATE", block)
-    t.FailNow()
-  }
+	block, _ := pem.Decode(cert_bytes)
+	if block == nil && block.Type != "CERTIFICATE" {
+		t.Errorf("expected to block to be non-nil CERTIFICATE", block)
+		t.FailNow()
+	}
 
-  var cert *x509.Certificate
-  cert,err := x509.ParseCertificate(block.Bytes)
+	var cert *x509.Certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
 
-  if err != nil {
-    t.Errorf("error parsing cert (what)")
-    t.FailNow()
-  }
+	if err != nil {
+		t.Errorf("error parsing cert (what)")
+		t.FailNow()
+	}
 
-  expected_fingerprint := "3B:1C:53:11:78:8B:70:71:07:00:FE:29:2F:AA:22:82:57:26:4A:09"
-  if SHA1FingerPrint(cert) != expected_fingerprint {
-    t.Errorf("cert fingerprints did not match")
-    t.FailNow()
-  }
+	expected_fingerprint := "3B:1C:53:11:78:8B:70:71:07:00:FE:29:2F:AA:22:82:57:26:4A:09"
+	if SHA1FingerPrint(cert) != expected_fingerprint {
+		t.Errorf("cert fingerprints did not match")
+		t.FailNow()
+	}
 }
