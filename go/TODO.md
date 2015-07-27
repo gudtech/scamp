@@ -1,5 +1,6 @@
  - [*] Setup Go project
  - [*] TLS session setup
+ - [ ] Verify TLS certificate with `/etc/authorized_services`
  - [*] cert verification
  - [*] Parse packet
  - [*] Generate packet
