@@ -44,11 +44,11 @@ func (conn *Connection) SendRequest(req Request) (err error) {
 	return
 }
 
-func (conn *Connection) RecvReply() Reply {
-	reply := Reply{}
+func (conn *Connection) RecvReply() (reply Reply, err error) {
+	reply = Reply{}
 	reply.Read(conn.conn)
 
-	return reply
+	return
 }
 
 func (conn *Connection) Close() {

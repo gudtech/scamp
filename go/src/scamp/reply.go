@@ -21,9 +21,9 @@ func (rep *Reply) Read(reader io.Reader) (packets []Packet, err error) {
 		}
 	}
 
-	fmt.Printf("Neat. Read %d packets\n", len(packets))
+	Info.Printf("Neat. Read %d packets\n", len(packets))
 	for i, pkt := range packets {
-		fmt.Printf("Packet[%d]: `%s`\n", i, pkt.body)
+		Info.Printf("Packet[%d]: `%s`\n", i, pkt.body)
 	}
 
 	return
