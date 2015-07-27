@@ -13,7 +13,7 @@ const (
 
 type Packet struct {
 	packetType   PacketType
-	packetMsgNo  int64
+	packetMsgNo  MsgNo
 	packetHeader PacketHeader
 	body         []byte
 }

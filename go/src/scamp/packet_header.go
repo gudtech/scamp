@@ -56,7 +56,7 @@ const (
 )
 
 var REQUEST_BYTES = []byte(`"request"`)
-var REPLY_BYTES = []byte(`"REPLY"`)
+var REPLY_BYTES = []byte(`"reply"`)
 
 func (messageType MessageType) MarshalJSON() (retval []byte, err error) {
 	switch messageType {
@@ -69,6 +69,17 @@ func (messageType MessageType) MarshalJSON() (retval []byte, err error) {
 	}
 
 	return
+}
+
+func (msgType *MessageType) UnmarshalJSON(incoming []byte) error {
+	if bytes.Equal(REQUEST_BYTES, incoming) {
+		*msgType = REQUEST
+	} else if bytes.Equal(REPLY_BYTES, incoming) {
+		*msgType = REPLY
+	} else {
+		return errors.New(fmt.Sprintf("unknown message type `%s`", incoming))
+	}
+	return nil
 }
 
 // Serialized to JSON and stuffed in the 'header' property

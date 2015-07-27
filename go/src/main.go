@@ -23,6 +23,7 @@ func main() {
 	reply, err := conn.RecvReply()
 	if err != nil {
 		scamp.Error.Printf("error receving reply: `%s`", err)
+		return
 	}
-	scamp.Info.Printf("got reply: `%s`", reply)
+	scamp.Info.Printf("got reply:\n`%s`\n`%v`\n", reply.Body(), reply.Body())
 }

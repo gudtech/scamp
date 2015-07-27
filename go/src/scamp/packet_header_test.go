@@ -52,3 +52,16 @@ func TestDecodePacketHeader(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestDecodePacketHeaderReply(t *testing.T) {
+	pkt_hdr_bytes := []byte("{\"type\":\"reply\",\"request_id\":\"XVlBzgbaiCMRAjWwhT\"}")
+	buf := bytes.NewReader(pkt_hdr_bytes)
+	decoder := json.NewDecoder(buf)
+
+	var pktHeader PacketHeader
+	err := decoder.Decode(&pktHeader)
+	if err != nil {
+		t.Errorf("unexpected error while decoding JSON. got `%s`", err)
+		t.FailNow()
+	}
+}

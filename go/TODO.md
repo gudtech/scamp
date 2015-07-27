@@ -1,18 +1,18 @@
  - [x] Setup Go project
  - [x] TLS session setup
- - [ ] Verify TLS certificate with `/etc/authorized_services`
  - [x] cert verification
  - [x] Parse packet
  - [x] Generate packet
- - [ ] Parse request
  - [x] Generate request
    - [x] Generate request header JSON
- - [ ] Parse reply
+ - [x] Parse reply
+ - [ ] Parse request
  - [ ] Generate reply
+ - [ ] Verify TLS certificate with `/etc/authorized_services`
  - [ ] Manage connection msgno
  - [ ] Parse service cache
  - [ ] Route RPC based on service cache
- - [ ] Use go logging library
+ - [x] Use go logging library
  - [ ] AuthZ service support
  - [ ] Fix bug where sending envelope type `JSON` fails silently (should at least emit 'unknown type' to STDERR)
  - [ ] Fix bug where header `"type": "REQUEST"` fails silently (should at least emit 'unknown type' to STDERR)

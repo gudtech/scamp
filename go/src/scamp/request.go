@@ -23,7 +23,7 @@ func (req *Request) GenerateMesageId() {
 	req.MessageId = string(b)
 }
 
-func (req *Request) ToPackets() []Packet {
+func (req *Request) ToPackets(msgNo MsgNo) []Packet {
 	if req.MessageId == "" {
 		req.GenerateMesageId()
 	}
@@ -38,12 +38,12 @@ func (req *Request) ToPackets() []Packet {
 	headerPacket := Packet{
 		packetHeader: headerHeader,
 		packetType:   HEADER,
-		packetMsgNo:  0,
+		packetMsgNo:  msgNo,
 	}
 
 	eofPacket := Packet{
 		packetType:  EOF,
-		packetMsgNo: 0,
+		packetMsgNo: msgNo,
 	}
 
 	return []Packet{headerPacket, eofPacket}
