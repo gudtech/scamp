@@ -1,3 +1,5 @@
+Features
+========
  - [x] Setup Go project
  - [x] TLS session setup
  - [x] cert verification
@@ -9,11 +11,14 @@
  - [ ] Parse request
  - [ ] Generate reply
  - [ ] Verify TLS certificate with `/etc/authorized_services`
- - [ ] Manage connection msgno
+ - [x] Manage connection msgno
  - [ ] Parse service cache
  - [ ] Route RPC based on service cache
  - [x] Use go logging library
  - [ ] AuthZ service support
+
+ Bugs
+ ====
  - [ ] Fix bug where sending envelope type `JSON` fails silently (should at least emit 'unknown type' to STDERR)
  - [ ] Fix bug where header `"type": "REQUEST"` fails silently (should at least emit 'unknown type' to STDERR)
  - [ ] Fix reference to documentation `message_id` which should read `request_id`

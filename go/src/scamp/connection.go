@@ -123,6 +123,9 @@ func (conn *Connection) NewSession() (sess *Session, err error) {
 }
 
 func (conn *Connection) Send(req Request) (sess *Session, err error) {
+	// The lock must be held until the first packet is sent. 
+	// With the current structure it will hold the lock until all
+	// packets for req are sent
 	conn.sessDemuxMutex.Lock()
 	sess,err = conn.NewSession()
 	if err != nil {

@@ -23,7 +23,7 @@ func TestHeaderRequestToPackets(t *testing.T) {
 		t.FailNow()
 	}
 
-	pkts := req.ToPackets()
+	pkts := req.ToPackets(0)
 	if len(pkts) != 2 {
 		t.Errorf("expected 2 packet")
 		t.FailNow()
