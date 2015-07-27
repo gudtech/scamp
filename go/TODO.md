@@ -1,12 +1,12 @@
- - [*] Setup Go project
- - [*] TLS session setup
+ - [x] Setup Go project
+ - [x] TLS session setup
  - [ ] Verify TLS certificate with `/etc/authorized_services`
- - [*] cert verification
- - [*] Parse packet
- - [*] Generate packet
+ - [x] cert verification
+ - [x] Parse packet
+ - [x] Generate packet
  - [ ] Parse request
- - [*] Generate request
-   - [*] Generate request header JSON
+ - [x] Generate request
+   - [x] Generate request header JSON
  - [ ] Parse reply
  - [ ] Generate reply
  - [ ] Manage connection msgno
