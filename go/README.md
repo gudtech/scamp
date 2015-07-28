@@ -7,6 +7,11 @@ The `scamp` package provides all the facilities necessary for participating in a
   * Parsing packets streams
   * Parsing and verifying messages
 
+Architecture
+--------
+
+Remote services are invoked by first establishing a `Connection` (TLS under the hood). This `Connection` can then be used to spawn `Sessions` which send a `Request` and block until a `Reply` is provided.
+
 Usage
 -----
 

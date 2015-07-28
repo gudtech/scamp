@@ -16,30 +16,41 @@ type Connection struct {
 	sessDemux    map[MsgNo](*Session)
 }
 
-func (conn *Connection) Connect(connspec string) (err error) {
+func NewConnection(tlsConn *tls.Conn) (conn *Connection, err error) {
+	conn.conn = tlsConn
+
 	conn.sessDemuxMutex = new(sync.Mutex)
 	conn.sessDemux = make(map[MsgNo](*Session))
-
-	config := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-	config.BuildNameToCertificate()
-
-	conn.conn, err = tls.Dial("tcp", connspec, config)
-	if err != nil {
-		return
-	}
-	go conn.PacketRouter()
 
 	// TODO get the end entity certificate instead
 	peerCerts := conn.conn.ConnectionState().PeerCertificates
 	if len(peerCerts) != 1 {
-		err = errors.New("new connection had more than one cert in chain")
+		err = errors.New("new connection must have exactly one cert in the chain")
 	}
 
 	peerCert := peerCerts[0]
 	conn.Fingerprint = SHA1FingerPrint(peerCert)
 
+	go conn.PacketRouter()
+	return
+}
+
+func Connect(connspec string) (conn *Connection, err error) {
+	config := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	config.BuildNameToCertificate()
+
+	tlsConn, err := tls.Dial("tcp", connspec, config)
+	if err != nil {
+		return
+	}
+
+	conn,err = NewConnection(tlsConn)
+	if err != nil {
+		return
+	}
+	
 	return
 }
 
