@@ -13,19 +13,19 @@ import "bytes"
 type envelopeFormat int
 
 const (
-	envelope_json envelopeFormat = iota
-	envelope_jsonstore
+	ENVELOPE_JSON envelopeFormat = iota
+	ENVELOPE_JSONSTORE
 )
 
-var envelope_json_bytes = []byte(`"json"`)
-var envelope_jsonstore_bytes = []byte(`"jsonstore"`)
+var ENVELOPE_JSON_bytes = []byte(`"json"`)
+var ENVELOPE_JSONSTORE_bytes = []byte(`"jsonstore"`)
 
 func (envFormat envelopeFormat) MarshalJSON() (retval []byte, err error) {
 	switch envFormat {
-	case envelope_json:
-		retval = envelope_json_bytes
-	case envelope_jsonstore:
-		retval = envelope_jsonstore_bytes
+	case ENVELOPE_JSON:
+		retval = ENVELOPE_JSON_bytes
+	case ENVELOPE_JSONSTORE:
+		retval = ENVELOPE_JSONSTORE_bytes
 	default:
 		err = errors.New(fmt.Sprintf("unknown format `%d`", envFormat))
 	}
@@ -34,10 +34,10 @@ func (envFormat envelopeFormat) MarshalJSON() (retval []byte, err error) {
 }
 
 func (envFormat *envelopeFormat) UnmarshalJSON(incoming []byte) error {
-	if bytes.Equal(envelope_json_bytes, incoming) {
-		*envFormat = envelope_json
-	} else if bytes.Equal(envelope_jsonstore_bytes, incoming) {
-		*envFormat = envelope_jsonstore
+	if bytes.Equal(ENVELOPE_JSON_bytes, incoming) {
+		*envFormat = ENVELOPE_JSON
+	} else if bytes.Equal(ENVELOPE_JSONSTORE_bytes, incoming) {
+		*envFormat = ENVELOPE_JSONSTORE
 	} else {
 		return errors.New(fmt.Sprintf("unknown envelope type `%s`", incoming))
 	}

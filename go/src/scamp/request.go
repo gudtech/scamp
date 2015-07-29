@@ -6,7 +6,7 @@ import "math/rand"
 // which sets their message_id on retrieval
 type Request struct {
 	Action         string
-	envelopeFormat envelopeFormat
+	EnvelopeFormat envelopeFormat
 	Version        int64
 	MessageId      string
 }
@@ -30,7 +30,7 @@ func (req *Request) ToPackets(msgNo msgNoType) []Packet {
 
 	headerHeader := PacketHeader{
 		Action:      req.Action,
-		Envelope:    req.envelopeFormat,
+		Envelope:    req.EnvelopeFormat,
 		Version:     req.Version,
 		MessageId:   req.MessageId,
 		messageType: request,
