@@ -10,14 +10,19 @@ type Service struct {
 	actions map[string]ServiceAction
 }
 
-func NewService() (serv *Service){
+func NewService(port int64) (serv *Service, err error){
 	serv = new(Service)
 	serv.actions = make(map[string]ServiceAction)
+
+	err = serv.listen(port)
+	if err != nil {
+		return
+	}
 
 	return
 }
 
-func (serv *Service)Listen(port int64) (err error) {
+func (serv *Service)listen(port int64) (err error) {
 	cert, err := tls.LoadX509KeyPair( "/etc/SCAMP/services/helloworld.crt","/etc/SCAMP/services/helloworld.key" )
 	if err != nil {
 		return
@@ -41,10 +46,12 @@ func (serv *Service)Register(name string, action ServiceAction) {
 
 func (serv *Service)AcceptRequests() {
 	for {
-		var tlsConn (*tls.Conn)
-		var listener net.Listener = serv.listener
 		netConn,err := serv.listener.Accept()
-		tlsConn = (&netConn).(*tls.Conn)
+		var tlsConn (*tls.Conn) = (netConn).(*tls.Conn)
+
+		if tlsConn == nil {
+			Error.Fatalf("could not create tlsConn")
+		}
 
 		conn,err := NewConnection(tlsConn)
 		if err != nil {
@@ -52,6 +59,12 @@ func (serv *Service)AcceptRequests() {
 		}
 
 
-		Trace.Println("got conn %s err %s", conn, err)
+		go serv.HandleConnection(conn)
 	}
+}
+
+func (serv *Service)HandleConnection(conn *connection) {
+	Trace.Printf("whooo handling connection %s", conn)
+
+
 }

@@ -1,8 +1,8 @@
 package scamp
 
 type Session struct {
-	msgNo MsgNo
-	conn *Connection
+	msgNo msgNoType
+	conn *connection
 	packets []Packet
 	replyChan (chan Reply)
 }
@@ -10,7 +10,7 @@ type Session struct {
 func (sess *Session) SendRequest(req Request) (err error) {
 	pkts := req.ToPackets(sess.msgNo)
 	for _, pkt := range pkts {
-		Trace.Printf("sending packetMsgNo %d", pkt.packetMsgNo)
+		Trace.Printf("sending packetmsgNoType %d", pkt.packetmsgNoType)
 		err = pkt.Write(sess.conn.conn)
 		if err != nil {
 			return

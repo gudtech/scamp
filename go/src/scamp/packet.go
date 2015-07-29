@@ -8,12 +8,12 @@ import "fmt"
 import "encoding/json"
 
 const (
-	THE_REST_SIZE = 5
+	the_rest_size = 5
 )
 
 type Packet struct {
 	packetType   PacketType
-	packetMsgNo  MsgNo
+	packetmsgNoType  msgNoType
 	packetHeader PacketHeader
 	body         []byte
 }
@@ -28,12 +28,12 @@ const (
 	ACK
 )
 
-var HEADER_BYTES = []byte("HEADER")
-var DATA_BYTES = []byte("DATA")
-var EOF_BYTES = []byte("EOF")
-var TXERR_BYTES = []byte("TXERR")
-var ACK_BYTES = []byte("ACK")
-var THE_REST_BYTES = []byte("END\r\n")
+var header_bytes = []byte("HEADER")
+var data_bytes = []byte("DATA")
+var eof_bytes = []byte("EOF")
+var txerr_bytes = []byte("TXERR")
+var ack_bytes = []byte("ACK")
+var the_rest_bytes = []byte("END\r\n")
 
 /*
   Will parse an io stream in to a packet struct
@@ -44,20 +44,20 @@ func ReadPacket(reader io.Reader) (Packet, error) {
 
 	pkt := Packet{}
 
-	_, err := fmt.Fscanf(reader, "%s %d %d\n", &pktTypeBytes, &(pkt.packetMsgNo), &bodyBytesNeeded)
+	_, err := fmt.Fscanf(reader, "%s %d %d\n", &pktTypeBytes, &(pkt.packetmsgNoType), &bodyBytesNeeded)
 	if err != nil {
 		return Packet{}, err
 	}
 
-	if bytes.Equal(HEADER_BYTES, pktTypeBytes) {
+	if bytes.Equal(header_bytes, pktTypeBytes) {
 		pkt.packetType = HEADER
-	} else if bytes.Equal(DATA_BYTES, pktTypeBytes) {
+	} else if bytes.Equal(data_bytes, pktTypeBytes) {
 		pkt.packetType = DATA
-	} else if bytes.Equal(EOF_BYTES, pktTypeBytes) {
+	} else if bytes.Equal(eof_bytes, pktTypeBytes) {
 		pkt.packetType = EOF
-	} else if bytes.Equal(TXERR_BYTES, pktTypeBytes) {
+	} else if bytes.Equal(txerr_bytes, pktTypeBytes) {
 		pkt.packetType = TXERR
-	} else if bytes.Equal(ACK_BYTES, pktTypeBytes) {
+	} else if bytes.Equal(ack_bytes, pktTypeBytes) {
 		pkt.packetType = ACK
 	} else {
 		return Packet{}, errors.New(fmt.Sprintf("unknown packet type `%s`", pktTypeBytes))
@@ -82,9 +82,9 @@ func ReadPacket(reader io.Reader) (Packet, error) {
 	}
 	pkt.body = bodyBuf
 
-	theRest := make([]byte, THE_REST_SIZE)
+	theRest := make([]byte, the_rest_size)
 	bytesRead, err = bufRdr.Read(theRest)
-	if bytesRead != THE_REST_SIZE || !bytes.Equal(theRest, []byte("END\r\n")) {
+	if bytesRead != the_rest_size || !bytes.Equal(theRest, []byte("END\r\n")) {
 		return Packet{}, errors.New("packet was missing trailing bytes")
 	}
 
@@ -111,9 +111,9 @@ func (pkt *Packet) Write(writer io.Writer) (err error) {
 	var packet_type_bytes []byte
 	switch pkt.packetType {
 	case HEADER:
-		packet_type_bytes = HEADER_BYTES
+		packet_type_bytes = header_bytes
 	case EOF:
-		packet_type_bytes = EOF_BYTES
+		packet_type_bytes = eof_bytes
 	}
 
 	var bodyBytes []byte
@@ -131,7 +131,7 @@ func (pkt *Packet) Write(writer io.Writer) (err error) {
 		bodyBytes = bodyBuf.Bytes()
 	}
 
-	_, err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.packetMsgNo, len(bodyBytes))
+	_, err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.packetmsgNoType, len(bodyBytes))
 	if err != nil {
 		return
 	}
@@ -140,7 +140,7 @@ func (pkt *Packet) Write(writer io.Writer) (err error) {
 		return
 	}
 
-	_, err = writer.Write(THE_REST_BYTES)
+	_, err = writer.Write(the_rest_bytes)
 
 	return
 }

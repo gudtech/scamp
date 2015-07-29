@@ -10,22 +10,22 @@ import "bytes"
   ENVELOPE FORMAT
 ******/
 
-type EnvelopeFormat int
+type envelopeFormat int
 
 const (
-	ENVELOPE_JSON EnvelopeFormat = iota
-	ENVELOPE_JSONSTORE
+	envelope_json envelopeFormat = iota
+	envelope_jsonstore
 )
 
-var ENVELOPE_JSON_BYTES = []byte(`"json"`)
-var ENVELOPE_JSONSTORE_BYTES = []byte(`"jsonstore"`)
+var envelope_json_bytes = []byte(`"json"`)
+var envelope_jsonstore_bytes = []byte(`"jsonstore"`)
 
-func (envFormat EnvelopeFormat) MarshalJSON() (retval []byte, err error) {
+func (envFormat envelopeFormat) MarshalJSON() (retval []byte, err error) {
 	switch envFormat {
-	case ENVELOPE_JSON:
-		retval = ENVELOPE_JSON_BYTES
-	case ENVELOPE_JSONSTORE:
-		retval = ENVELOPE_JSONSTORE_BYTES
+	case envelope_json:
+		retval = envelope_json_bytes
+	case envelope_jsonstore:
+		retval = envelope_jsonstore_bytes
 	default:
 		err = errors.New(fmt.Sprintf("unknown format `%d`", envFormat))
 	}
@@ -33,11 +33,11 @@ func (envFormat EnvelopeFormat) MarshalJSON() (retval []byte, err error) {
 	return
 }
 
-func (envFormat *EnvelopeFormat) UnmarshalJSON(incoming []byte) error {
-	if bytes.Equal(ENVELOPE_JSON_BYTES, incoming) {
-		*envFormat = ENVELOPE_JSON
-	} else if bytes.Equal(ENVELOPE_JSONSTORE_BYTES, incoming) {
-		*envFormat = ENVELOPE_JSONSTORE
+func (envFormat *envelopeFormat) UnmarshalJSON(incoming []byte) error {
+	if bytes.Equal(envelope_json_bytes, incoming) {
+		*envFormat = envelope_json
+	} else if bytes.Equal(envelope_jsonstore_bytes, incoming) {
+		*envFormat = envelope_jsonstore
 	} else {
 		return errors.New(fmt.Sprintf("unknown envelope type `%s`", incoming))
 	}
@@ -48,22 +48,22 @@ func (envFormat *EnvelopeFormat) UnmarshalJSON(incoming []byte) error {
   MESSAGE TYPE
 ******/
 
-type MessageType int
+type messageType int
 
 const (
-	REQUEST MessageType = iota
-	REPLY
+	request messageType = iota
+	reply
 )
 
-var REQUEST_BYTES = []byte(`"request"`)
-var REPLY_BYTES = []byte(`"reply"`)
+var request_bytes = []byte(`"request"`)
+var reply_bytes = []byte(`"reply"`)
 
-func (messageType MessageType) MarshalJSON() (retval []byte, err error) {
+func (messageType messageType) MarshalJSON() (retval []byte, err error) {
 	switch messageType {
-	case REQUEST:
-		retval = REQUEST_BYTES
-	case REPLY:
-		retval = REPLY_BYTES
+	case request:
+		retval = request_bytes
+	case reply:
+		retval = reply_bytes
 	default:
 		err = errors.New(fmt.Sprintf("unknown message type `%d`", messageType))
 	}
@@ -71,11 +71,11 @@ func (messageType MessageType) MarshalJSON() (retval []byte, err error) {
 	return
 }
 
-func (msgType *MessageType) UnmarshalJSON(incoming []byte) error {
-	if bytes.Equal(REQUEST_BYTES, incoming) {
-		*msgType = REQUEST
-	} else if bytes.Equal(REPLY_BYTES, incoming) {
-		*msgType = REPLY
+func (msgType *messageType) UnmarshalJSON(incoming []byte) error {
+	if bytes.Equal(request_bytes, incoming) {
+		*msgType = request
+	} else if bytes.Equal(reply_bytes, incoming) {
+		*msgType = reply
 	} else {
 		return errors.New(fmt.Sprintf("unknown message type `%s`", incoming))
 	}
@@ -86,13 +86,13 @@ func (msgType *MessageType) UnmarshalJSON(incoming []byte) error {
 // of each packet
 type PacketHeader struct {
 	Action   string         `json:"action"`   // request
-	Envelope EnvelopeFormat `json:"envelope"` // request
+	Envelope envelopeFormat `json:"envelope"` // request
 	// error  string        `json:"error"`            // reply
 	// error_code []byte    `json:"error_code"`   // reply
 	MessageId string `json:"request_id"` // both
 	// station []byte       `json:"station"`         // request
 	// ticket []byte        `json:"ticket"`           // request
-	MessageType MessageType `json:"type"`    // both
+	messageType messageType `json:"type"`    // both
 	Version     int64       `json:"version"` // request
 }
 

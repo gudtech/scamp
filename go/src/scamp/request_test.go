@@ -14,7 +14,7 @@ func TestGenerateMessageId(t *testing.T) {
 func TestHeaderRequestToPackets(t *testing.T) {
 	req := Request{
 		Action:         "hello.helloworld",
-		EnvelopeFormat: ENVELOPE_JSON,
+		envelopeFormat: ENVELOPE_JSON,
 		Version:        1,
 	}
 
@@ -38,8 +38,8 @@ func TestHeaderRequestToPackets(t *testing.T) {
 		t.Errorf("expected HEADER type")
 		t.FailNow()
 	}
-	if hdrPkt.packetMsgNo != 0 {
-		t.Errorf("header msgNo was %d but expected %d", hdrPkt.packetMsgNo, 0)
+	if hdrPkt.packetmsgNoType != 0 {
+		t.Errorf("header msgNo was %d but expected %d", hdrPkt.packetmsgNoType, 0)
 		t.FailNow()
 	}
 	expectedHeader := PacketHeader{
@@ -57,7 +57,7 @@ func TestHeaderRequestToPackets(t *testing.T) {
 		t.Errorf("expected EOF type")
 		t.FailNow()
 	}
-	if eofPkt.packetMsgNo != 0 {
-		t.Errorf("eof msgNo was %d but expected %d", eofPkt.packetMsgNo, 0)
+	if eofPkt.packetmsgNoType != 0 {
+		t.Errorf("eof msgNo was %d but expected %d", eofPkt.packetmsgNoType, 0)
 	}
 }

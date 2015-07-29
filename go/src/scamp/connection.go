@@ -5,37 +5,37 @@ import "crypto/tls"
 import "fmt"
 import "sync"
 
-type MsgNo int64;
+type msgNoType int64;
 
-type Connection struct {
+type connection struct {
 	conn        *tls.Conn
 	Fingerprint string
-	msgCnt      MsgNo
+	msgCnt      msgNoType
 
 	sessDemuxMutex *sync.Mutex
-	sessDemux    map[MsgNo](*Session)
+	sessDemux    map[msgNoType](*Session)
+
+	requestChan (chan Request)
 }
 
-func NewConnection(tlsConn *tls.Conn) (conn *Connection, err error) {
+func NewConnection(tlsConn *tls.Conn) (conn *connection, err error) {
+	conn = new(connection)
 	conn.conn = tlsConn
 
 	conn.sessDemuxMutex = new(sync.Mutex)
-	conn.sessDemux = make(map[MsgNo](*Session))
+	conn.sessDemux = make(map[msgNoType](*Session))
 
 	// TODO get the end entity certificate instead
 	peerCerts := conn.conn.ConnectionState().PeerCertificates
-	if len(peerCerts) != 1 {
-		err = errors.New("new connection must have exactly one cert in the chain")
+	if len(peerCerts) == 1 {
+		peerCert := peerCerts[0]
+		conn.Fingerprint = sha1FingerPrint(peerCert)
 	}
 
-	peerCert := peerCerts[0]
-	conn.Fingerprint = SHA1FingerPrint(peerCert)
-
-	go conn.PacketRouter()
 	return
 }
 
-func Connect(connspec string) (conn *Connection, err error) {
+func Connect(connspec string) (conn *connection, err error) {
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -50,11 +50,12 @@ func Connect(connspec string) (conn *Connection, err error) {
 	if err != nil {
 		return
 	}
+	go conn.PacketRouter()
 	
 	return
 }
 
-func (conn *Connection) PacketRouter() (err error) {
+func (conn *connection) PacketRouter() (err error) {
 	var pkt Packet
 	var sess *Session
 
@@ -66,25 +67,25 @@ func (conn *Connection) PacketRouter() (err error) {
 		}
 
 		conn.sessDemuxMutex.Lock()
-		sess = conn.sessDemux[pkt.packetMsgNo]
+		sess = conn.sessDemux[pkt.packetmsgNoType]
 		conn.sessDemuxMutex.Unlock()
 
 		if sess == nil {
-			err = errors.New(fmt.Sprintf("packet (msgNo: %d) has no corresponding session", pkt.packetMsgNo))
+			err = errors.New(fmt.Sprintf("packet (msgNo: %d) has no corresponding session", pkt.packetmsgNoType))
 			return
 		}
 
 		if pkt.packetType == HEADER {
-			Trace.Printf("(SESS %d) HEADER packet\n", pkt.packetMsgNo)
+			Trace.Printf("(SESS %d) HEADER packet\n", pkt.packetmsgNoType)
 			sess.Append(pkt)
 		} else if pkt.packetType == DATA {
-			Trace.Printf("(SESS %d) DATA packet\n", pkt.packetMsgNo)
+			Trace.Printf("(SESS %d) DATA packet\n", pkt.packetmsgNoType)
 			sess.Append(pkt)
 		} else if pkt.packetType == EOF {
-			Trace.Printf("(SESS %d) EOF packet\n", pkt.packetMsgNo)
+			Trace.Printf("(SESS %d) EOF packet\n", pkt.packetmsgNoType)
 			sess.Deliver()
 		} else if pkt.packetType == TXERR {
-			Trace.Printf("(SESS %d) TXERR\n`%s`", pkt.packetMsgNo, pkt.body)
+			Trace.Printf("(SESS %d) TXERR\n`%s`", pkt.packetmsgNoType, pkt.body)
 			sess.Deliver()
 		} else {
 			Trace.Printf("(SESS %d) unknown packet type %d\n", pkt.packetType)
@@ -95,7 +96,7 @@ func (conn *Connection) PacketRouter() (err error) {
 }
 
 // !!!! Deprecated
-func (conn *Connection) SendRequest(req Request) (err error) {
+func (conn *connection) SendRequest(req Request) (err error) {
 	pkts := req.ToPackets(0)
 	for _, pkt := range pkts {
 		err = pkt.Write(conn.conn)
@@ -108,7 +109,7 @@ func (conn *Connection) SendRequest(req Request) (err error) {
 }
 
 // !!!! Deprecated
-func (conn *Connection) RecvReply() (reply Reply, err error) {
+func (conn *connection) RecvReply() (reply Reply, err error) {
 	reply = Reply{}
 	err = reply.Read(conn.conn)
 	if err != nil {
@@ -118,7 +119,7 @@ func (conn *Connection) RecvReply() (reply Reply, err error) {
 	return
 }
 
-func (conn *Connection) NewSession() (sess *Session, err error) {
+func (conn *connection) NewSession() (sess *Session, err error) {
 	sess = new(Session)
 
 	sess.conn = conn
@@ -133,7 +134,7 @@ func (conn *Connection) NewSession() (sess *Session, err error) {
 	return
 }
 
-func (conn *Connection) Send(req Request) (sess *Session, err error) {
+func (conn *connection) Send(req Request) (sess *Session, err error) {
 	// The lock must be held until the first packet is sent. 
 	// With the current structure it will hold the lock until all
 	// packets for req are sent
@@ -152,6 +153,11 @@ func (conn *Connection) Send(req Request) (sess *Session, err error) {
 	return
 }
 
-func (conn *Connection) Close() {
+// Pulls full Requests out of master Request chan
+// func (conn *connection) Recv() Session {
+// 	return <-conn.sessionChan
+// }
+
+func (conn *connection) Close() {
 	conn.conn.Close()
 }

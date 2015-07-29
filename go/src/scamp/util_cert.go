@@ -6,7 +6,7 @@ import "strings"
 import "crypto/sha1"
 import "crypto/x509"
 
-func SHA1FingerPrint(cert *x509.Certificate) (hexSha1 string) {
+func sha1FingerPrint(cert *x509.Certificate) (hexSha1 string) {
 	h := sha1.New()
 	h.Write(cert.Raw)
 	val := h.Sum(nil)

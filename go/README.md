@@ -29,7 +29,7 @@ Usage
 
 		request := scamp.Request{
 			Action:         "helloworld.hello",
-			EnvelopeFormat: scamp.ENVELOPE_JSON,
+			envelopeFormat: scamp.ENVELOPE_JSON,
 			Version:        1,
 		}
 		conn.SendRequest(request)
