@@ -8,8 +8,9 @@ Features
  - [x] Generate request
    - [x] Generate request header JSON
  - [x] Parse reply
- - [ ] Parse request
- - [ ] Generate reply
+ - [x] Parse request
+   - [x] Route to action based on header JSON
+ - [x] Generate reply
  - [ ] Verify TLS certificate with `/etc/authorized_services`
  - [x] Manage connection msgno
  - [ ] Parse service cache
