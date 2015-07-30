@@ -70,8 +70,6 @@ func (conn *connection) packetRouter(ignoreUnknownSessions bool, isService bool)
 		if err != nil {
 			Error.Printf("err reading packet: `%s`. Returning.", err)
 			return
-		} else {
-			Trace.Printf("ReadPacket: `%s`", pkt)
 		}
 
 		conn.sessDemuxMutex.Lock()

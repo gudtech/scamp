@@ -86,9 +86,6 @@ func ReadPacket(reader io.Reader) (Packet, error) {
 		}
 	}
 	pkt.body = bodyBuf
-	if pkt.packetType == DATA {
-		Trace.Printf("bodyBytesNeeded: %d. read packet bodyBuf: `%v`", bodyBytesNeeded, pkt.packetType, pkt.body)
-	}
 
 	theRest := make([]byte, the_rest_size)
 	bytesRead, err = bufRdr.Read(theRest)

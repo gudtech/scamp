@@ -22,7 +22,7 @@ func newSession(newMsgNo msgNoType, conn *connection) (sess *Session) {
 func (sess *Session) SendRequest(req Request) (err error) {
 	pkts := req.ToPackets(sess.msgNo)
 	for _, pkt := range pkts {
-		Trace.Printf("sending msgNo %d", pkt.msgNo)
+		// Trace.Printf("sending msgNo %d", pkt.msgNo)
 		err = pkt.Write(sess.conn.conn)
 		if err != nil {
 			return
