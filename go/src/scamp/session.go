@@ -81,3 +81,7 @@ func (sess *Session) DeliverRequest() {
 	}
 	sess.requestChan <- req
 }
+
+func (sess *Session) Free(){
+	sess.conn.Free(sess)
+}

@@ -167,3 +167,10 @@ func (conn *connection) Recv() (sess *Session) {
 	sess = <-conn.newSessions
 	return
 }
+
+func (conn *connection) Free(sess *Session) {
+	conn.sessDemuxMutex.Lock()
+	msgNo := sess.packets[0].msgNo
+	delete(conn.sessDemux, msgNo)
+	conn.sessDemuxMutex.Unlock()
+}
