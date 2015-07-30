@@ -14,27 +14,12 @@ type connection struct {
 
 	sessDemuxMutex *sync.Mutex
 	sessDemux    map[msgNoType](*Session)
-
-	requestChan (chan Request)
+	newSessions  (chan *Session)
 }
 
-func NewConnection(tlsConn *tls.Conn) (conn *connection, err error) {
-	conn = new(connection)
-	conn.conn = tlsConn
-
-	conn.sessDemuxMutex = new(sync.Mutex)
-	conn.sessDemux = make(map[msgNoType](*Session))
-
-	// TODO get the end entity certificate instead
-	peerCerts := conn.conn.ConnectionState().PeerCertificates
-	if len(peerCerts) == 1 {
-		peerCert := peerCerts[0]
-		conn.Fingerprint = sha1FingerPrint(peerCert)
-	}
-
-	return
-}
-
+// Establish secure connection to remote service.
+// You must use the *connection.Fingerprint to verify the
+// remote host
 func Connect(connspec string) (conn *connection, err error) {
 	config := &tls.Config{
 		InsecureSkipVerify: true,
@@ -46,74 +31,92 @@ func Connect(connspec string) (conn *connection, err error) {
 		return
 	}
 
-	conn,err = NewConnection(tlsConn)
+	sessChan := make(chan *Session, 100)
+
+	conn,err = newConnection(tlsConn, sessChan)
 	if err != nil {
 		return
 	}
-	go conn.PacketRouter()
+	go conn.packetRouter(true, false)
 	
 	return
 }
 
-func (conn *connection) PacketRouter() (err error) {
+func newConnection(tlsConn *tls.Conn, sessChan (chan *Session)) (conn *connection, err error) {
+	conn = new(connection)
+	conn.conn = tlsConn
+
+	conn.sessDemuxMutex = new(sync.Mutex)
+	conn.sessDemux = make(map[msgNoType](*Session))
+	conn.newSessions = sessChan
+
+	// TODO get the end entity certificate instead
+	peerCerts := conn.conn.ConnectionState().PeerCertificates
+	if len(peerCerts) == 1 {
+		peerCert := peerCerts[0]
+		conn.Fingerprint = sha1FingerPrint(peerCert)
+	}
+
+	return
+}
+
+// Demultiplex packets to their proper buffers.
+func (conn *connection) packetRouter(ignoreUnknownSessions bool, isService bool) (err error) {
 	var pkt Packet
 	var sess *Session
 
 	for {
 		pkt, err = ReadPacket(conn.conn)
 		if err != nil {
-			err = errors.New(fmt.Sprintf("err reading packet: `%s`", err))
+			Error.Printf("err reading packet: `%s`. Returning.", err)
 			return
+		} else {
+			Trace.Printf("ReadPacket: `%s`", pkt)
 		}
 
 		conn.sessDemuxMutex.Lock()
-		sess = conn.sessDemux[pkt.packetmsgNoType]
-		conn.sessDemuxMutex.Unlock()
+		sess = conn.sessDemux[pkt.msgNo]
+		if sess == nil && !ignoreUnknownSessions {
+			sess = newSession(pkt.msgNo, conn)
+			conn.sessDemux[pkt.msgNo] = sess
+			conn.sessDemuxMutex.Unlock()
+			conn.newSessions <- sess // Could block and holding the DemuxMutex would block other tasks (namely: sending requests)
+		} else {
+			conn.sessDemuxMutex.Unlock()
+		}
 
-		if sess == nil {
-			err = errors.New(fmt.Sprintf("packet (msgNo: %d) has no corresponding session", pkt.packetmsgNoType))
-			return
+		if sess == nil && ignoreUnknownSessions {
+			err = errors.New(fmt.Sprintf("packet (msgNo: %d) has no corresponding session", pkt.msgNo))
+			continue
 		}
 
 		if pkt.packetType == HEADER {
-			Trace.Printf("(SESS %d) HEADER packet\n", pkt.packetmsgNoType)
+			Trace.Printf("(SESS %d) HEADER packet\n", pkt.msgNo)
 			sess.Append(pkt)
 		} else if pkt.packetType == DATA {
-			Trace.Printf("(SESS %d) DATA packet\n", pkt.packetmsgNoType)
+			Trace.Printf("(SESS %d) DATA packet\n", pkt.msgNo)
 			sess.Append(pkt)
 		} else if pkt.packetType == EOF {
-			Trace.Printf("(SESS %d) EOF packet\n", pkt.packetmsgNoType)
-			sess.Deliver()
+			Trace.Printf("(SESS %d) EOF packet\n", pkt.msgNo)
+			// TODO: need polymorphism on Req/Reply so they can be delivered
+			if isService {
+				Trace.Printf("session delivering request")
+				sess.DeliverRequest()
+			} else {
+				Trace.Printf("session delivering reply")
+				go sess.DeliverReply()
+			}
 		} else if pkt.packetType == TXERR {
-			Trace.Printf("(SESS %d) TXERR\n`%s`", pkt.packetmsgNoType, pkt.body)
-			sess.Deliver()
+			Trace.Printf("(SESS %d) TXERR\n`%s`", pkt.msgNo, pkt.body)
+			// TODO: need polymorphism on Req/Reply so they can be delivered
+			if isService {
+				sess.DeliverRequest()
+			} else {
+				go sess.DeliverReply()
+			}
 		} else {
 			Trace.Printf("(SESS %d) unknown packet type %d\n", pkt.packetType)
 		}
-	}
-
-	return
-}
-
-// !!!! Deprecated
-func (conn *connection) SendRequest(req Request) (err error) {
-	pkts := req.ToPackets(0)
-	for _, pkt := range pkts {
-		err = pkt.Write(conn.conn)
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-// !!!! Deprecated
-func (conn *connection) RecvReply() (reply Reply, err error) {
-	reply = Reply{}
-	err = reply.Read(conn.conn)
-	if err != nil {
-		return
 	}
 
 	return
@@ -160,4 +163,9 @@ func (conn *connection) Send(req Request) (sess *Session, err error) {
 
 func (conn *connection) Close() {
 	conn.conn.Close()
+}
+
+func (conn *connection) Recv() (sess *Session) {
+	sess = <-conn.newSessions
+	return
 }

@@ -6,7 +6,7 @@ import "fmt"
 import "bytes"
 
 type Reply struct {
-	blob []byte
+	Blob []byte
 }
 
 func (rep *Reply) Read(reader io.Reader) (err error) {
@@ -35,14 +35,38 @@ func (rep *Reply) Read(reader io.Reader) (err error) {
 		mergeBuffer.Write(pkt.body)
 	}
 
-	rep.blob = mergeBuffer.Bytes()
-	Info.Printf( "Final buffer size: %d\n", len(rep.blob))
+	rep.Blob = mergeBuffer.Bytes()
+	Info.Printf( "Final buffer size: %d\n", len(rep.Blob))
 
 
 	return
 }
 
+func (rep *Reply) ToPackets(msgNo msgNoType) []Packet {
+	headerHeader := PacketHeader{
+		messageType: reply,
+	}
+	headerPacket := Packet{
+		packetHeader: headerHeader,
+		packetType:   HEADER,
+		msgNo:  msgNo,
+	}
+
+	dataPacket := Packet{
+		packetType: DATA,
+		msgNo:  msgNo,
+		body: rep.Blob,
+	}
+
+	eofPacket := Packet{
+		packetType:  EOF,
+		msgNo: msgNo,
+	}
+
+	return []Packet{headerPacket, dataPacket, eofPacket}
+}
+
 func (rep *Reply) Body() (body []byte) {
-	body = rep.blob
+	body = rep.Blob
 	return
 }

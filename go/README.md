@@ -45,3 +45,10 @@ Running the test suite
 
   export GOPATH=$PWD
   go test scamp
+
+Documentation
+-------------
+
+	export GOPATH=$PWD
+	godoc -http=:6060
+	# open http://localhost:6060/

@@ -4,7 +4,7 @@ import "testing"
 
 func TestGenerateMessageId(t *testing.T) {
 	req := Request{}
-	req.GenerateMesageId()
+	req.GenerateMessageId()
 	if req.MessageId == "" || len(req.MessageId) != 18 {
 		t.Errorf("MesasageId should have been 18-byte string but got `%s`", req.MessageId)
 		t.FailNow()
@@ -38,8 +38,8 @@ func TestHeaderRequestToPackets(t *testing.T) {
 		t.Errorf("expected HEADER type")
 		t.FailNow()
 	}
-	if hdrPkt.packetmsgNoType != 0 {
-		t.Errorf("header msgNo was %d but expected %d", hdrPkt.packetmsgNoType, 0)
+	if hdrPkt.msgNo != 0 {
+		t.Errorf("header msgNo was %d but expected %d", hdrPkt.msgNo, 0)
 		t.FailNow()
 	}
 	expectedHeader := PacketHeader{
@@ -57,7 +57,7 @@ func TestHeaderRequestToPackets(t *testing.T) {
 		t.Errorf("expected EOF type")
 		t.FailNow()
 	}
-	if eofPkt.packetmsgNoType != 0 {
-		t.Errorf("eof msgNo was %d but expected %d", eofPkt.packetmsgNoType, 0)
+	if eofPkt.msgNo != 0 {
+		t.Errorf("eof msgNo was %d but expected %d", eofPkt.msgNo, 0)
 	}
 }

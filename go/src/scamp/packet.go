@@ -13,7 +13,7 @@ const (
 
 type Packet struct {
 	packetType   PacketType
-	packetmsgNoType  msgNoType
+	msgNo  msgNoType
 	packetHeader PacketHeader
 	body         []byte
 }
@@ -44,7 +44,12 @@ func ReadPacket(reader io.Reader) (Packet, error) {
 
 	pkt := Packet{}
 
-	_, err := fmt.Fscanf(reader, "%s %d %d\n", &pktTypeBytes, &(pkt.packetmsgNoType), &bodyBytesNeeded)
+	// bunchaBytes := make([]byte, 30)
+	// reader.Read(bunchaBytes)
+	// Trace.Printf("bunchaBytes: `%s`\n\t\t\t`%v`", bunchaBytes, bunchaBytes)
+	// return Packet{}, nil
+
+	_, err := fmt.Fscanf(reader, "%s %d %d\r\n", &pktTypeBytes, &(pkt.msgNo), &bodyBytesNeeded)
 	if err != nil {
 		return Packet{}, err
 	}
@@ -81,6 +86,9 @@ func ReadPacket(reader io.Reader) (Packet, error) {
 		}
 	}
 	pkt.body = bodyBuf
+	if pkt.packetType == DATA {
+		Trace.Printf("bodyBytesNeeded: %d. read packet bodyBuf: `%v`", bodyBytesNeeded, pkt.packetType, pkt.body)
+	}
 
 	theRest := make([]byte, the_rest_size)
 	bytesRead, err = bufRdr.Read(theRest)
@@ -112,26 +120,34 @@ func (pkt *Packet) Write(writer io.Writer) (err error) {
 	switch pkt.packetType {
 	case HEADER:
 		packet_type_bytes = header_bytes
+	case DATA:
+		packet_type_bytes = data_bytes
 	case EOF:
 		packet_type_bytes = eof_bytes
+	case TXERR:
+		packet_type_bytes = txerr_bytes
+	case ACK:
+		packet_type_bytes = ack_bytes
+	default:
+		err = errors.New( fmt.Sprintf("unknown packetType %s", pkt.packetType) )
+		return
 	}
-
-	var bodyBytes []byte
-	bodyBytes = []byte("")
 
 	bodyBuf := new(bytes.Buffer)
 	// TODO this is why you use pointers so you can
 	// carry nil values...
-	emptyHeader := PacketHeader{}
-	if pkt.packetHeader != emptyHeader {
+	if pkt.packetType == HEADER {
 		err = pkt.packetHeader.Write(bodyBuf)
 		if err != nil {
 			return
 		}
-		bodyBytes = bodyBuf.Bytes()
+	} else {
+		bodyBuf.Write(pkt.body)
 	}
 
-	_, err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.packetmsgNoType, len(bodyBytes))
+	bodyBytes := bodyBuf.Bytes()
+
+	_, err = fmt.Fprintf(writer, "%s %d %d\r\n", packet_type_bytes, pkt.msgNo, len(bodyBytes))
 	if err != nil {
 		return
 	}

@@ -20,6 +20,34 @@ Listening For Requests
 
 Making a Request against a Service
 
+  conn,err := scamp.Connect(":30100")
+  if err != nil {
+	fmt.Printf("could not connect to service")
+	return
+  }
+  sess,err := conn.Send(scamp.Request{
+    Action:         "helloworld.hello",
+    EnvelopeFormat: scamp.ENVELOPE_JSON,
+    Version:        1,
+  })
+  if err != nil {
+	fmt.Printf("could not send reqest")
+	return
+  }
+  var reply Reply = sess.Recv()
+
+Library Internals
+
+SCAMP is a layered architecture:
+
+  Request/Reply
+  -------------
+  Session
+  -------------
+  Connection
+  -------------
+  Service
+
 */
 package scamp
 

@@ -13,7 +13,7 @@ type Request struct {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func (req *Request) GenerateMesageId() {
+func (req *Request) GenerateMessageId() {
 	// http://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang
 	b := make([]rune, 18)
 	for i := range b {
@@ -25,7 +25,7 @@ func (req *Request) GenerateMesageId() {
 
 func (req *Request) ToPackets(msgNo msgNoType) []Packet {
 	if req.MessageId == "" {
-		req.GenerateMesageId()
+		req.GenerateMessageId()
 	}
 
 	headerHeader := PacketHeader{
@@ -35,15 +35,16 @@ func (req *Request) ToPackets(msgNo msgNoType) []Packet {
 		MessageId:   req.MessageId,
 		messageType: request,
 	}
+	
 	headerPacket := Packet{
 		packetHeader: headerHeader,
 		packetType:   HEADER,
-		packetmsgNoType:  msgNo,
+		msgNo:  msgNo,
 	}
 
 	eofPacket := Packet{
 		packetType:  EOF,
-		packetmsgNoType: msgNo,
+		msgNo: msgNo,
 	}
 
 	return []Packet{headerPacket, eofPacket}

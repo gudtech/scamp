@@ -113,7 +113,7 @@ func TestFailTooManyBodyBytes(t *testing.T) {
 func TestWriteHeaderPacket(t *testing.T) {
 	packet := Packet{
 		packetType:  HEADER,
-		packetmsgNoType: 0,
+		msgNo: 0,
 		packetHeader: PacketHeader{
 			Action:    "hello.helloworld",
 			Envelope:  ENVELOPE_JSON,
@@ -140,7 +140,7 @@ func TestWriteHeaderPacket(t *testing.T) {
 func TestWriteEofPacket(t *testing.T) {
 	packet := Packet{
 		packetType:  EOF,
-		packetmsgNoType: 0,
+		msgNo: 0,
 		body:        []byte(""),
 	}
 	expected := []byte("EOF 0 0\r\nEND\r\n")
