@@ -22,8 +22,5 @@ func main() {
 		scamp.Trace.Printf("successfully responded to hello world")
 	})
 
-
-	wait := make(chan bool)
-	go service.Run()
-	_ = <-wait
+	service.Run()
 }

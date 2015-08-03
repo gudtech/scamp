@@ -17,7 +17,8 @@ Features
  - [ ] Route RPC based on service cache
  - [x] Use go logging library
  - [ ] AuthZ service support
-
+ - [ ] Chunk body to 128k
+ 
  Bugs
  ====
  - [ ] Fix bug where sending envelope type `JSON` fails silently (should at least emit 'unknown type' to STDERR)

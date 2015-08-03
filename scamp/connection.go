@@ -68,7 +68,9 @@ func (conn *connection) packetRouter(ignoreUnknownSessions bool, isService bool)
 	for {
 		pkt, err = ReadPacket(conn.conn)
 		if err != nil {
-			Error.Printf("err reading packet: `%s`. Returning.", err)
+			// TODO: what are the issues with stopping a packet router here?
+			// The socket has probably closed
+			Error.Printf("err reading packet: `%s`. (EOF is normal). Returning.", err)
 			return
 		}
 
