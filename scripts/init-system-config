@@ -2,3 +2,6 @@
 
 echo "discovery.cache_path = /tmp/discovery.cache" > /etc/SCAMP/soa.conf
 echo "bus.authorized_services = /etc/SCAMP/authorized_services" >> /etc/SCAMP/soa.conf
+
+# TODO: this unblocks me in many situations but may not be correct for production
+echo "bus.address = 127.0.0.1" >> /etc/SCAMP/soa.conf
