@@ -24,12 +24,16 @@ then
 fi
 
 mkdir -p /etc/SCAMP/services
-openssl req -new -nodes -subj "/CN=$hostname $service/O=SCAMP Inc/C=US/ST=California/L=San Diego" -x509 -days 3650 -newkey rsa:4096 -out /etc/SCAMP/services/$service.crt -keyout /etc/SCAMP/services/$service.key
+export servkey=/etc/SCAMP/services/$service.key
+export servcert=/etc/SCAMP/services/$service.crt
 
-fingerprint=$( openssl x509 -fingerprint -noout -in /etc/SCAMP/services/$service.crt | sed 's/.*=//' )
+openssl genrsa -out $servkey 4096
+openssl req -new -nodes -subj "/CN=$hostname $service/O=SCAMP Inc/C=US/ST=California/L=San Diego" -x509 -days 3650 -key $servkey -out $servcert
+
+fingerprint=$( openssl x509 -fingerprint -noout -in $servcert | sed 's/.*=//' )
 
 echo "$fingerprint    $requests:ALL" >> /etc/SCAMP/authorized_services
-echo "$service.soa_key = /etc/SCAMP/services/$service.key" >> /etc/SCAMP/soa.conf
-echo "$service.soa_cert = /etc/SCAMP/services/$service.crt" >> /etc/SCAMP/soa.conf
+echo "$service.soa_key = $servkey" >> /etc/SCAMP/soa.conf
+echo "$service.soa_cert = $servcert" >> /etc/SCAMP/soa.conf
 
 echo "changed=yes comment=provisioned"
